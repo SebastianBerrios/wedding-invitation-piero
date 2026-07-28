@@ -22,10 +22,17 @@ export function HeroSongButton() {
       : hero.songPrompt;
 
   return (
+    // No `aria-label` here: the button's own visible text (`label`) already
+    // fully describes its purpose and current state, and doubling it with a
+    // differently-worded `aria-label` (e.g. `hero.songPrompt` vs
+    // `audio.playLabel`) would fail WCAG 2.5.3 "Label in Name" — a
+    // voice-control user speaking the visible label would not match the
+    // accessible name. `StickyMusicToggle` is icon-only and legitimately
+    // needs its own `aria-label` since it has no visible text to conflict
+    // with.
     <button
       type="button"
       aria-pressed={isPlaying}
-      aria-label={isPlaying ? audio.pauseLabel : audio.playLabel}
       onClick={() => toggle(audio.src)}
       className="inline-flex min-h-11 items-center gap-2 rounded-full border border-body px-6 py-2 font-caps text-sm uppercase tracking-eyebrow text-body"
     >

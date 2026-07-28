@@ -23,6 +23,7 @@ export function RsvpForm() {
   const nameId = useId();
   const guestCountId = useId();
   const noteId = useId();
+  const errorId = useId();
 
   const [name, setName] = useState("");
   const [guestCountRaw, setGuestCountRaw] = useState("1");
@@ -47,6 +48,12 @@ export function RsvpForm() {
         ? rsvp.guestCountInvalidHint
         : null;
 
+  // Only associate/announce the error once the guest has actually tried to
+  // submit — an empty required field is not yet "invalid" before that.
+  const showError = attemptedSubmit && errorMessage !== null;
+  const nameInvalid = showError && error === "name-required";
+  const guestCountInvalid = showError && error === "guest-count-invalid";
+
   const handleSubmitClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (!href) {
       event.preventDefault();
@@ -66,6 +73,8 @@ export function RsvpForm() {
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder={rsvp.namePlaceholder}
+          aria-invalid={nameInvalid ? "true" : undefined}
+          aria-describedby={nameInvalid ? errorId : undefined}
           className="rounded-card border border-body bg-transparent px-3 py-2 font-serif text-body placeholder:text-body/60"
         />
       </label>
@@ -81,6 +90,8 @@ export function RsvpForm() {
           max={rsvp.maxGuests}
           value={guestCountRaw}
           onChange={(event) => setGuestCountRaw(event.target.value)}
+          aria-invalid={guestCountInvalid ? "true" : undefined}
+          aria-describedby={guestCountInvalid ? errorId : undefined}
           className="rounded-card border border-body bg-transparent px-3 py-2 font-serif text-body"
         />
       </label>
@@ -110,8 +121,8 @@ export function RsvpForm() {
         {rsvp.submitLabel}
       </a>
 
-      {attemptedSubmit && errorMessage ? (
-        <p role="alert" className="font-serif text-sm text-body">
+      {showError ? (
+        <p id={errorId} role="alert" className="font-serif text-sm text-body">
           {errorMessage}
         </p>
       ) : null}
