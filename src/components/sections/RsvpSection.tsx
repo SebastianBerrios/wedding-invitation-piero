@@ -21,7 +21,7 @@ export function RsvpSection() {
     <section
       id="rsvp"
       aria-labelledby="rsvp-heading"
-      className="mx-auto flex max-w-md flex-col items-center gap-8 px-gutter py-section text-center"
+      className="mx-auto flex max-w-md flex-col items-center gap-8 px-gutter py-section text-center lg:max-w-lg lg:gap-10"
     >
       <SectionHeading
         id="rsvp-heading"
@@ -29,7 +29,7 @@ export function RsvpSection() {
         heading={rsvp.heading}
       />
 
-      <p className="font-serif text-body">{rsvp.paragraph}</p>
+      <p className="font-serif text-body lg:text-lg">{rsvp.paragraph}</p>
 
       <div className="flex w-full flex-col gap-4 text-left">
         <label className="flex flex-col gap-1">

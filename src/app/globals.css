@@ -23,7 +23,16 @@
   --font-script: var(--font-great-vibes), "Apple Chancery", cursive;
 
   --text-eyebrow: 0.8125rem;
-  --text-script-lg: clamp(2.75rem, 13vw, 6.5rem);
+  /*
+   * Fluid script display size (fix: corrective work unit, Defect 1).
+   * Formula reaches its ceiling exactly at the 1440px desktop reference
+   * width (1.5rem + 5vw = 6rem when vw = 1440px), so it keeps growing all
+   * the way to desktop instead of saturating early — real presence at
+   * both ends, not a mobile size stretched flat across the viewport.
+   * Also used per-name (see HeroSection), each on its own line, so this
+   * never has to hold a whole "Bride & Groom" run in one box.
+   */
+  --text-script-lg: clamp(2.25rem, 1.5rem + 5vw, 6rem);
   --text-date-xl: clamp(4rem, 22vw, 9rem);
 
   --tracking-eyebrow: 0.28em;

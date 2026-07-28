@@ -50,8 +50,15 @@ export interface LetterUnitLabels {
 }
 
 export interface LetterConfig {
+  /**
+   * The Letter section's own `h2` heading, e.g. "Nuestra Historia" —
+   * distinct from `countdownHeading`, which labels only the countdown
+   * sub-block nested inside this section (design apply-progress fix,
+   * corrective work unit).
+   */
+  heading: string;
   paragraphs: readonly string[];
-  /** e.g. "Faltan" */
+  /** e.g. "Faltan" — labels the countdown sub-block only, not the section. */
   countdownHeading: string;
   /** e.g. "¡Ya llegó el gran día!" */
   countdownReachedLabel: string;
@@ -97,9 +104,19 @@ export interface ItineraryRow {
 }
 
 export interface ItineraryConfig {
+  /** Labels only the itinerary timeline sub-block, e.g. "Itinerario". */
   heading: string;
   /** Variable-length by design — never a fixed tuple. */
   rows: readonly ItineraryRow[];
+}
+
+/**
+ * The Event Details section's own `h2` heading, describing the venue cards
+ * block (the itinerary timeline nested beneath it keeps its own
+ * `itinerary.heading` as an `h3`).
+ */
+export interface EventDetailsConfig {
+  heading: string;
 }
 
 export interface DressCodeConfig {
@@ -189,6 +206,7 @@ export interface InvitationConfig {
     reception: VenueConfig;
   };
   itinerary: ItineraryConfig;
+  eventDetails: EventDetailsConfig;
   dressCode: DressCodeConfig;
   gifts: GiftsConfig;
   rsvp: RsvpConfig;

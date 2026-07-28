@@ -16,24 +16,27 @@ export function FamilySection() {
     <section
       id="family"
       aria-labelledby="family-heading"
-      className="mx-auto flex max-w-3xl flex-col items-center gap-10 px-gutter py-section text-center"
+      className="mx-auto flex max-w-3xl flex-col items-center gap-10 px-gutter py-section text-center lg:max-w-5xl lg:gap-14"
     >
-      <h2 id="family-heading" className="font-script text-script-lg text-ink">
+      <h2
+        id="family-heading"
+        className="max-w-prose font-script text-script-lg text-ink"
+      >
         {family.blessingLine}
       </h2>
 
-      <div className="grid w-full gap-6 sm:grid-cols-3">
+      <div className="grid w-full gap-6 sm:grid-cols-3 lg:gap-10">
         {family.groups.map((group) => (
           <div
             key={group.title}
-            className="flex flex-col items-center gap-3 rounded-card border border-rule/60 p-6"
+            className="flex flex-col items-center gap-3 rounded-card border border-rule/60 p-6 lg:p-8"
           >
             <h3 className="font-caps text-sm uppercase tracking-caps text-ink">
               {group.title}
             </h3>
             <ul className="flex flex-col gap-1">
               {group.names.map((name) => (
-                <li key={name} className="font-serif text-body">
+                <li key={name} className="font-serif text-body lg:text-lg">
                   {name}
                 </li>
               ))}

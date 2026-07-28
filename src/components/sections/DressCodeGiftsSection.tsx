@@ -20,7 +20,7 @@ export function DressCodeGiftsSection() {
     <section
       id="dress-code-gifts"
       aria-labelledby="dress-code-gifts-heading"
-      className="mx-auto flex max-w-2xl flex-col items-center gap-10 px-gutter py-section text-center"
+      className="mx-auto flex max-w-2xl flex-col items-center gap-10 px-gutter py-section text-center lg:max-w-3xl lg:gap-14"
     >
       <SectionHeading
         id="dress-code-gifts-heading"
@@ -28,11 +28,11 @@ export function DressCodeGiftsSection() {
         heading={dressCode.scriptWord}
       />
 
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex max-w-prose flex-col items-center gap-3">
         <p className="font-caps text-sm uppercase tracking-caps text-ink">
           {dressCode.label}
         </p>
-        <p className="font-serif text-body">{dressCode.note}</p>
+        <p className="font-serif text-body lg:text-lg">{dressCode.note}</p>
         {dressCode.avoidColors.length > 0 ? (
           <ul className="flex flex-wrap justify-center gap-2">
             {dressCode.avoidColors.map((color) => (
@@ -51,14 +51,18 @@ export function DressCodeGiftsSection() {
         <h3 className="font-caps text-sm uppercase tracking-caps text-ink">
           {gifts.eyebrow}
         </h3>
-        <p className="font-script text-2xl text-ink">{gifts.scriptWord}</p>
-        <p className="font-serif text-body">{gifts.paragraph}</p>
+        <p className="font-script text-2xl text-ink lg:text-3xl">
+          {gifts.scriptWord}
+        </p>
+        <p className="max-w-prose font-serif text-body lg:text-lg">
+          {gifts.paragraph}
+        </p>
 
-        <div className="flex w-full flex-col gap-4">
+        <div className="flex w-full flex-col gap-4 lg:max-w-md">
           {gifts.accounts.map((account) => (
             <div
               key={`${account.bank}-${account.accountNumber}`}
-              className="flex flex-col items-center gap-2 rounded-card border border-rule/60 p-6"
+              className="flex flex-col items-center gap-2 rounded-card border border-rule/60 p-6 lg:p-8"
             >
               <p className="font-caps text-sm uppercase tracking-caps text-ink">
                 {account.bank}
@@ -85,11 +89,15 @@ export function DressCodeGiftsSection() {
                 this for the real `CopyAccountButton` client island
                 (`navigator.clipboard` + select-and-copy fallback +
                 "Copiado" confirmation). Intentionally inert until then.
+
+                Fix (Defect 3): interactive button, raised from
+                `text-eyebrow` (13px) to `text-sm` (14px) with an explicit
+                `min-h-11` (44px) tap target.
               */}
               <button
                 type="button"
                 aria-disabled="true"
-                className="mt-2 inline-flex items-center gap-2 rounded-full border border-body px-4 py-1.5 font-caps text-eyebrow uppercase tracking-eyebrow text-body"
+                className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border border-body px-5 py-1.5 font-caps text-sm uppercase tracking-eyebrow text-body"
               >
                 {gifts.copyLabel}
               </button>

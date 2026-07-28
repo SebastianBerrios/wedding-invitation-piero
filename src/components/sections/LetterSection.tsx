@@ -2,13 +2,11 @@ import { invitationConfig } from "@/config/invitation";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 /**
- * Section 2 of 7: letter paragraphs + a reserved countdown slot.
- *
- * No dedicated "letter heading" field exists in `LetterConfig` (design §2),
- * so this section reuses `letter.countdownHeading` ("Faltan") as its `h2` —
- * a documented, honest reuse rather than inventing a hardcoded chrome
- * string, since the countdown block is the section's visual/semantic
- * centerpiece.
+ * Section 2 of 7: the letter is its own block (headed by `letter.heading`),
+ * followed by the countdown as its own labeled sub-block (`h3`, using
+ * `letter.countdownHeading`, "Faltan") — matching the reference's grouping
+ * and fixing Defect 4 (the section's `h2` used to be "Faltan", which
+ * described only the countdown, not the letter paragraphs it sat above).
  */
 export function LetterSection() {
   const { letter } = invitationConfig;
@@ -17,19 +15,24 @@ export function LetterSection() {
     <section
       id="letter"
       aria-labelledby="letter-heading"
-      className="mx-auto flex max-w-2xl flex-col items-center gap-8 px-gutter py-section text-center"
+      className="mx-auto flex max-w-2xl flex-col items-center gap-10 px-gutter py-section text-center lg:max-w-3xl lg:gap-14"
     >
-      <SectionHeading id="letter-heading" heading={letter.countdownHeading} />
+      <SectionHeading id="letter-heading" heading={letter.heading} />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex max-w-prose flex-col gap-4">
         {letter.paragraphs.map((paragraph, index) => (
-          <p key={index} className="font-serif text-lg text-body">
+          <p key={index} className="font-serif text-lg text-body lg:text-xl">
             {paragraph}
           </p>
         ))}
       </div>
 
-      <CountdownPlaceholder />
+      <div className="flex flex-col items-center gap-3">
+        <h3 className="font-caps text-sm uppercase tracking-caps text-ink">
+          {letter.countdownHeading}
+        </h3>
+        <CountdownPlaceholder />
+      </div>
     </section>
   );
 }

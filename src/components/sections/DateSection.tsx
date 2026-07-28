@@ -39,7 +39,10 @@ export function DateSection() {
       >
         {display.month}
       </p>
-      <p aria-hidden="true" className="font-serif text-lg text-body">
+      <p
+        aria-hidden="true"
+        className="font-serif text-lg text-body lg:text-xl"
+      >
         {display.year} · {display.time}
       </p>
     </section>

@@ -41,6 +41,7 @@ export const invitationConfig = {
     scrollHint: "Desliza para ver la invitación",
   },
   letter: {
+    heading: "Nuestra Historia",
     paragraphs: [
       "Con el corazón lleno de alegría, queremos que seas parte del día más importante de nuestras vidas.",
       "Tu presencia hará que esta celebración sea aún más especial. Te esperamos para brindar juntos por este nuevo comienzo.",
@@ -99,6 +100,9 @@ export const invitationConfig = {
       { time: "4:00 pm", label: "Almuerzo", icon: "dinner" },
       { time: "5:00 pm", label: "Brindis y baile", icon: "dance" },
     ],
+  },
+  eventDetails: {
+    heading: "Ceremonia y Recepción",
   },
   dressCode: {
     eyebrow: "CÓDIGO DE VESTIMENTA",

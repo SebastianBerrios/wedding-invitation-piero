@@ -41,6 +41,7 @@ const validConfig: InvitationConfig = {
     scrollHint: "Desliza para ver la invitación",
   },
   letter: {
+    heading: "Nuestra Historia",
     paragraphs: ["Con el corazón lleno de alegría."],
     countdownHeading: "Faltan",
     countdownReachedLabel: "¡Ya llegó el gran día!",
@@ -79,6 +80,9 @@ const validConfig: InvitationConfig = {
       { time: "11:00 am", label: "Ceremonia religiosa", icon: "ceremony" },
       { time: "1:30 pm", label: "Cóctel de bienvenida", icon: "cocktail" },
     ],
+  },
+  eventDetails: {
+    heading: "Ceremonia y Recepción",
   },
   dressCode: {
     eyebrow: "CÓDIGO DE VESTIMENTA",
@@ -324,6 +328,20 @@ describe("validateInvitationConfig", () => {
     config.audio.src = "audio/song.mp3";
     const errors = validateInvitationConfig(config);
     expect(errors.some((e) => e.path === "audio.src")).toBe(true);
+  });
+
+  it("15. rejects a blank letter heading", () => {
+    const config = clone();
+    config.letter.heading = "   ";
+    const errors = validateInvitationConfig(config);
+    expect(errors.some((e) => e.path === "letter.heading")).toBe(true);
+  });
+
+  it("16. rejects a blank eventDetails heading", () => {
+    const config = clone();
+    config.eventDetails.heading = "";
+    const errors = validateInvitationConfig(config);
+    expect(errors.some((e) => e.path === "eventDetails.heading")).toBe(true);
   });
 
   it("14. rejects a blank meta title and an overlong meta description", () => {

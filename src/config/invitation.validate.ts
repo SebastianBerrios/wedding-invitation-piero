@@ -294,6 +294,21 @@ export function validateInvitationConfig(
     });
   }
 
+  // 15. letter.heading non-empty (the Letter section's own h2, distinct
+  // from countdownHeading which labels only the countdown sub-block)
+  if (!nonEmpty(config.letter.heading)) {
+    errors.push({ path: "letter.heading", message: "must be non-empty" });
+  }
+
+  // 16. eventDetails.heading non-empty (the Event Details section's own h2,
+  // distinct from itinerary.heading which labels only the itinerary sub-block)
+  if (!nonEmpty(config.eventDetails.heading)) {
+    errors.push({
+      path: "eventDetails.heading",
+      message: "must be non-empty",
+    });
+  }
+
   // 14. meta.title / meta.description
   if (!nonEmpty(config.meta.title)) {
     errors.push({ path: "meta.title", message: "must be non-empty" });
