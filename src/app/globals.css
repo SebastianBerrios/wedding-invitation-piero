@@ -1,1 +1,79 @@
 @import "tailwindcss";
+
+@theme {
+  /* Role-named, not hue-named — the role IS the contrast contract (design R3). */
+  --color-surface: #fef9f0; /* page background (cream) */
+  --color-surface-warm: #f7efdd; /* gradient stop only */
+  --color-ink: #0f1015; /* headings, 18.1:1 on surface (near-black) */
+  --color-body: #575531; /* ALL body text, 7.29:1 on surface (olive) */
+
+  /*
+   * Gold (#bcb096) measures 2.05:1 against the cream surface — it FAILS
+   * WCAG AA for both normal text (4.5:1) and large text (3:1).
+   * Legal uses: `stroke` / `border` / `fill` on `aria-hidden` decoration
+   * only (rules, hairlines, envelope seal, botanical sprigs).
+   * ILLEGAL: any text node, at any size, ever. Do not add `text-rule`
+   * (or any utility that paints text with this token) to a component
+   * that renders copy — it will fail contrast review.
+   */
+  --color-rule: #bcb096;
+
+  --font-serif: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  --font-caps: var(--font-cormorant-sc), var(--font-cormorant), Georgia, serif;
+  --font-script: var(--font-great-vibes), "Apple Chancery", cursive;
+
+  --text-eyebrow: 0.8125rem;
+  --text-script-lg: clamp(2.75rem, 13vw, 6.5rem);
+  --text-date-xl: clamp(4rem, 22vw, 9rem);
+
+  --tracking-eyebrow: 0.28em;
+  --tracking-caps: 0.12em;
+
+  --spacing-section: clamp(4rem, 12vw, 8rem); /* vertical rhythm between sections */
+  --spacing-gutter: clamp(1.25rem, 6vw, 3rem); /* horizontal page gutter */
+  --radius-card: 2px; /* printed-paper, not app-chrome */
+
+  --animate-flap-open: flap-open 900ms cubic-bezier(0.4, 0, 0.2, 1) 400ms forwards;
+  --animate-card-rise: card-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) 1150ms forwards;
+}
+
+@keyframes flap-open {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    /* not 180deg — avoids coplanar z-fighting, reads more natural */
+    transform: rotateX(-165deg);
+  }
+}
+
+@keyframes card-rise {
+  from {
+    transform: translateY(0) scale(0.985);
+  }
+  to {
+    transform: translateY(-38%) scale(1);
+  }
+}
+
+@keyframes seal-fall {
+  to {
+    transform: translateY(14px) rotate(-8deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .envelope-flap {
+    animation: none;
+    transform: rotateX(-165deg);
+  }
+  .envelope-card {
+    animation: none;
+    transform: translateY(-38%);
+  }
+  .envelope-seal {
+    animation: none;
+    opacity: 0;
+  }
+}
