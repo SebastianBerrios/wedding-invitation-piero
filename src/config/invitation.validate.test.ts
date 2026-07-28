@@ -126,6 +126,8 @@ const validConfig: InvitationConfig = {
       guestsLinePlural: "Asistiremos {count} personas en total.",
       noteLine: "Nota: {note}",
     },
+    nameRequiredHint: "Por favor escribe tu nombre para continuar.",
+    guestCountInvalidHint: "Ingresa un número de invitados válido.",
   },
   whatsapp: {
     displayNumber: "+51 987 654 321",
@@ -342,6 +344,22 @@ describe("validateInvitationConfig", () => {
     config.eventDetails.heading = "";
     const errors = validateInvitationConfig(config);
     expect(errors.some((e) => e.path === "eventDetails.heading")).toBe(true);
+  });
+
+  it("17. rejects a blank rsvp.nameRequiredHint", () => {
+    const config = clone();
+    config.rsvp.nameRequiredHint = "   ";
+    const errors = validateInvitationConfig(config);
+    expect(errors.some((e) => e.path === "rsvp.nameRequiredHint")).toBe(true);
+  });
+
+  it("18. rejects a blank rsvp.guestCountInvalidHint", () => {
+    const config = clone();
+    config.rsvp.guestCountInvalidHint = "";
+    const errors = validateInvitationConfig(config);
+    expect(
+      errors.some((e) => e.path === "rsvp.guestCountInvalidHint"),
+    ).toBe(true);
   });
 
   it("14. rejects a blank meta title and an overlong meta description", () => {

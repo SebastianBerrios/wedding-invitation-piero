@@ -1,5 +1,6 @@
 import { invitationConfig } from "@/config/invitation";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { CopyAccountButton } from "@/components/interactive/CopyAccountButton";
 
 /**
  * Section 6 of 7: dress code note + gift/bank-account rows, combined into
@@ -10,8 +11,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
  *
  * The account number is always rendered as visible plain text (spec
  * `gift-account-copy` — "Account Number Always Visible as Plain Text").
- * The copy button next to it is a static, inert placeholder — Phase 6b
- * swaps it for the real `CopyAccountButton` client island.
+ * `CopyAccountButton` owns the copy affordance next to each account.
  */
 export function DressCodeGiftsSection() {
   const { dressCode, gifts } = invitationConfig;
@@ -84,23 +84,7 @@ export function DressCodeGiftsSection() {
                 </p>
               ) : null}
 
-              {/*
-                Static placeholder for the copy affordance. Phase 6b swaps
-                this for the real `CopyAccountButton` client island
-                (`navigator.clipboard` + select-and-copy fallback +
-                "Copiado" confirmation). Intentionally inert until then.
-
-                Fix (Defect 3): interactive button, raised from
-                `text-eyebrow` (13px) to `text-sm` (14px) with an explicit
-                `min-h-11` (44px) tap target.
-              */}
-              <button
-                type="button"
-                aria-disabled="true"
-                className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border border-body px-5 py-1.5 font-caps text-sm uppercase tracking-eyebrow text-body"
-              >
-                {gifts.copyLabel}
-              </button>
+              <CopyAccountButton accountNumber={account.accountNumber} />
             </div>
           ))}
         </div>

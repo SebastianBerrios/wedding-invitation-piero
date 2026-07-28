@@ -148,6 +148,8 @@ export const invitationConfig = {
       guestsLinePlural: "Asistiremos {count} personas en total.",
       noteLine: "Nota: {note}",
     },
+    nameRequiredHint: "Por favor escribe tu nombre para continuar.",
+    guestCountInvalidHint: "Ingresa un número de invitados válido.",
   },
   whatsapp: {
     displayNumber: "+51 999 999 999",

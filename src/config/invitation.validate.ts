@@ -309,6 +309,24 @@ export function validateInvitationConfig(
     });
   }
 
+  // 17. rsvp.nameRequiredHint non-empty (shown by the RsvpForm client
+  // island when the guest submits with an empty name)
+  if (!nonEmpty(config.rsvp.nameRequiredHint)) {
+    errors.push({
+      path: "rsvp.nameRequiredHint",
+      message: "must be non-empty",
+    });
+  }
+
+  // 18. rsvp.guestCountInvalidHint non-empty (shown when the guest-count
+  // field is empty/non-numeric/out of range)
+  if (!nonEmpty(config.rsvp.guestCountInvalidHint)) {
+    errors.push({
+      path: "rsvp.guestCountInvalidHint",
+      message: "must be non-empty",
+    });
+  }
+
   // 14. meta.title / meta.description
   if (!nonEmpty(config.meta.title)) {
     errors.push({ path: "meta.title", message: "must be non-empty" });

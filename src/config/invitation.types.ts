@@ -170,6 +170,10 @@ export interface RsvpConfig {
   submitLabel: string;
   maxGuests: number;
   messageTemplate: RsvpMessageTemplate;
+  /** Shown when the guest tries to submit with an empty name. */
+  nameRequiredHint: string;
+  /** Shown when the guest count field is empty/non-numeric/out of range. */
+  guestCountInvalidHint: string;
 }
 
 export interface WhatsAppConfig {
