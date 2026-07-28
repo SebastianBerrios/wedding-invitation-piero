@@ -33,16 +33,30 @@ function SectionDivider() {
  * spec `invitation-sections` ("Fixed Section Order"): Hero, Letter+
  * Countdown, Date, Family, Event details, Dress code+Gifts, RSVP.
  *
- * Each section is wrapped in `RevealOnScroll` (design §10, work unit 8b) —
- * a `'use client'` boundary that passes the server-rendered section through
- * untouched (see component doc), so no section content ships as client JS.
+ * Every section BELOW the fold is wrapped in `RevealOnScroll` (design §10,
+ * work unit 8b) — a `'use client'` boundary that passes the server-rendered
+ * section through untouched (see component doc), so no section content
+ * ships as client JS.
+ *
+ * `HeroSection` is deliberately NOT wrapped (perf corrective work unit,
+ * Defect 7). Design §9 is explicit that the hero "stays a server component"
+ * with "no JS, no IntersectionObserver" — its own envelope-opening keyframe
+ * animation IS its reveal effect. Wrapping it in `RevealOnScroll` anyway
+ * (the pre-existing bug this fixes) forced the very first, above-the-fold,
+ * guaranteed-LCP content behind `opacity:0` until React hydrated, an
+ * IntersectionObserver mounted and fired, and a 700ms CSS transition
+ * finished — none of which the hero needs, since it's in the initial
+ * viewport by definition. Measured impact: this is what was inflating LCP
+ * to ~4.2s (and in some runs made LCP undetectable entirely — content
+ * sitting at `opacity: 0` is excluded from LCP candidacy by spec) despite
+ * the page's actual HTML/CSS/font payload finishing in well under a
+ * second. Removing the wrapper here is a correctness fix, not a visual
+ * change: the hero's own CSS animation already reveals it identically.
  */
 export default function Home() {
   return (
     <main>
-      <RevealOnScroll>
-        <HeroSection />
-      </RevealOnScroll>
+      <HeroSection />
       <RevealOnScroll>
         <LetterSection />
       </RevealOnScroll>

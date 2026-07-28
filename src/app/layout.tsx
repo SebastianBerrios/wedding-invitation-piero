@@ -8,9 +8,19 @@ import { GrainOverlay } from "@/components/decor/GrainOverlay";
 // Self-hosted (SIL OFL 1.1) via next/font — see ASSETS.md for provenance.
 // Hoisted to module scope so the font files are fetched/subset once at
 // build time, not per request.
+//
+// Weight 600 was declared for both families but is NEVER applied anywhere
+// in the codebase (confirmed: no `font-semibold`/`font-bold`/`font-[600]`
+// utility exists on any element using `font-serif`/`font-caps`, and Tailwind
+// v4's preflight resets headings to `font-weight: inherit`). Because
+// `next/font` preloads every declared weight unconditionally regardless of
+// whether the page actually renders it, that dead weight was shipped as a
+// real, wasted network request on every load. Trimming to the single
+// weight actually used removes it with zero visual change (verified via
+// computed-style audit against the live page).
 const cormorant = Cormorant_Garamond({
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "600"],
+  weight: ["400"],
   display: "swap",
   variable: "--font-cormorant",
   fallback: ["Georgia", "Times New Roman", "serif"],
@@ -18,7 +28,7 @@ const cormorant = Cormorant_Garamond({
 
 const cormorantSc = Cormorant_SC({
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "600"],
+  weight: ["400"],
   display: "swap",
   variable: "--font-cormorant-sc",
   fallback: ["Georgia", "serif"],
