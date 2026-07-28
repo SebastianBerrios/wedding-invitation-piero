@@ -215,7 +215,16 @@ describe("validateInvitationConfig", () => {
 
   it("6b. rejects a family group with a blank name", () => {
     const config = clone();
-    config.family.groups[0].names[0] = "  ";
+    // `family.groups` and each group's `names` are both `readonly` arrays;
+    // build fresh mutable copies instead of indexing into the readonly-typed
+    // ones (would fail TS2542 at compile time — the readonly modifier is
+    // enforced by the type, not just by convention, so we must not bypass it
+    // with a cast).
+    const names = [...config.family.groups[0].names];
+    names[0] = "  ";
+    const groups = [...config.family.groups];
+    groups[0] = { ...groups[0], names };
+    config.family = { ...config.family, groups };
     const errors = validateInvitationConfig(config);
     expect(errors.some((e) => e.path === "family.groups[0].names[0]")).toBe(true);
   });
