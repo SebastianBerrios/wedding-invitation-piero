@@ -1,5 +1,6 @@
 import { invitationConfig } from "@/config/invitation";
 import { Monogram } from "@/components/decor/Monogram";
+import { HeroSongButton } from "@/components/interactive/HeroSongButton";
 
 /**
  * Section 1 of 7 (design §1/§9, spec `invitation-sections`). Carries the
@@ -7,10 +8,9 @@ import { Monogram } from "@/components/decor/Monogram";
  * `h2` so this section still contributes one heading to the "one `h2` per
  * section" count, matching visual order (eyebrow renders above the names).
  *
- * The 3-layer animated envelope (design §9) and the working song-prompt
- * button (`HeroSongButton`, Phase 7 client island) are NOT part of this
- * work unit — this section renders a plain backdrop and an inert
- * placeholder button so nothing here claims to work that doesn't yet.
+ * The 3-layer animated envelope (design §9) is NOT part of this work
+ * unit — this section renders a plain backdrop. The song-prompt affordance
+ * is the real `HeroSongButton` client island (Phase 7).
  */
 export function HeroSection() {
   const { hero, couple } = invitationConfig;
@@ -58,23 +58,7 @@ export function HeroSection() {
 
       <Monogram initials={couple.monogram} className="h-16 w-16 lg:h-20 lg:w-20" />
 
-      {/*
-        Static placeholder for the song-prompt affordance. Phase 7 swaps
-        this for the `HeroSongButton` client island (real `onClick` +
-        `aria-pressed` wiring). Intentionally inert until then.
-
-        Fix (Defect 3): this IS an interactive control (a button, even if
-        inert for now), so its label is raised from `text-eyebrow` (13px) to
-        `text-sm` (14px) and the control gets an explicit `min-h-11`
-        (44px) tap target.
-      */}
-      <button
-        type="button"
-        aria-disabled="true"
-        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-body px-6 py-2 font-caps text-sm uppercase tracking-eyebrow text-body"
-      >
-        {hero.songPrompt}
-      </button>
+      <HeroSongButton />
 
       <p className="font-serif text-sm text-body lg:text-base">
         {hero.scrollHint}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Cormorant_SC, Great_Vibes } from "next/font/google";
 import "./globals.css";
+import { StickyMusicToggle } from "@/components/interactive/StickyMusicToggle";
 
 // Self-hosted (SIL OFL 1.1) via next/font — see ASSETS.md for provenance.
 // Hoisted to module scope so the font files are fetched/subset once at
@@ -46,6 +47,7 @@ export default function RootLayout({
     >
       <body className="bg-surface text-body font-serif antialiased">
         {children}
+        <StickyMusicToggle />
       </body>
     </html>
   );
