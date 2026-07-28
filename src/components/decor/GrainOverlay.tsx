@@ -4,9 +4,10 @@
  * deliberately NOT a viewport-sized live SVG filter — that would repaint on
  * every scroll composite and is measurably janky on mid-range mobile.
  *
- * Not yet wired into the page tree (that lands in Phase 8b, alongside the
- * watercolor background and botanical accents) — this work unit only
- * establishes the primitive.
+ * Wired at the page root (`layout.tsx`, work unit 8b) as a `fixed`
+ * viewport-covering overlay — `fixed` always spans exactly the viewport
+ * regardless of the document's scrollable height, with no positioned-
+ * ancestor sizing required (unlike `absolute`).
  */
 const GRAIN_TILE =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23g)'/%3E%3C/svg%3E\")";
@@ -15,7 +16,7 @@ export function GrainOverlay({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={`pointer-events-none absolute inset-0 opacity-[0.055] mix-blend-multiply ${className ?? ""}`}
+      className={`pointer-events-none fixed inset-0 opacity-[0.055] mix-blend-multiply ${className ?? ""}`}
       style={{
         backgroundImage: GRAIN_TILE,
         backgroundSize: "220px 220px",

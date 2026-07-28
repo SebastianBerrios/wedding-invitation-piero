@@ -111,3 +111,69 @@
     opacity: 0;
   }
 }
+
+/*
+ * Watercolor background recipe (design §9, work unit 8b): layered CSS
+ * radial gradients only — cheap, GPU-friendly, no live filter. The bounded
+ * `feDisplacementMap` "bleed" ellipses and the pre-rendered grain tile live
+ * in `WatercolorBackground.tsx`/`GrainOverlay.tsx` (self-authored SVG).
+ */
+.watercolor {
+  background-color: var(--color-surface);
+  background-image:
+    radial-gradient(
+      120% 80% at 12% -8%,
+      color-mix(in oklab, var(--color-rule) 26%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      90% 70% at 100% 6%,
+      color-mix(in oklab, var(--color-body) 10%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      70% 60% at 50% 108%,
+      color-mix(in oklab, var(--color-rule) 20%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      #fffdf7 0%,
+      var(--color-surface) 45%,
+      var(--color-surface-warm) 100%
+    );
+}
+
+/*
+ * Scroll-reveal (design §10, work unit 8b). The hidden state is scoped
+ * entirely to `.reveal-ready`, added by a synchronous inline script in
+ * `layout.tsx` AFTER hydration succeeds — if JS never runs, this selector
+ * never matches anything and `[data-reveal="idle"]` stays fully visible
+ * (its un-scoped default below), so content is never trapped invisible.
+ */
+[data-reveal="idle"] {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.reveal-ready [data-reveal="idle"] {
+  opacity: 0;
+  translate: 0 12px;
+}
+
+.reveal-ready [data-reveal="shown"] {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 700ms ease-out,
+    translate 700ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-ready [data-reveal="idle"],
+  .reveal-ready [data-reveal="shown"] {
+    opacity: 1;
+    translate: 0 0;
+    transition: none;
+  }
+}
