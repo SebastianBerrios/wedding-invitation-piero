@@ -129,12 +129,19 @@
 .envelope-name {
   /*
    * Coefficient measured empirically (Playwright `getBoundingClientRect`/
-   * `scrollWidth` against the rendered card at 320/390/1440px, see the
-   * corrective apply-progress notes), then given a safety margin so a
-   * 14-character name — not just the 12-character placeholder — stays
-   * under the card's available inner width at every measured breakpoint.
+   * `canvas.measureText` against the rendered card at 320/360/390/1440px —
+   * see the verify-report corrective batch). The floor was raised from
+   * `6.5cqi` (13.08px at 320px, well below body-text size — the couple
+   * names are the page's centerpiece, not fine print) to `7.15cqi`: the
+   * exact single-line ceiling for a worst-case 14-character name measured
+   * at each breakpoint is ~7.79cqi (zero px to spare); `7.15cqi` keeps
+   * ~9% margin below that ceiling at every measured width while
+   * maximizing size. `hyphens: none` plus `white-space: nowrap` (below)
+   * — not `overflow-wrap: break-word` — is what actually prevents
+   * mid-word breaking; this coefficient only controls how LARGE the type
+   * can be before a 14-character name would need to break at all.
    */
-  font-size: clamp(0.75rem, 6.5cqi, 2rem);
+  font-size: clamp(0.875rem, 7.15cqi, 2.125rem);
   line-height: 1;
   white-space: nowrap;
   overflow-wrap: normal;

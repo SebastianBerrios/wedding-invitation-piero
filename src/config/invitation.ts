@@ -47,6 +47,7 @@ export const invitationConfig = {
       "Tu presencia hará que esta celebración sea aún más especial. Te esperamos para brindar juntos por este nuevo comienzo.",
     ],
     countdownHeading: "Faltan",
+    countdownReachedHeading: "¡Hoy!",
     countdownReachedLabel: "¡Ya llegó el gran día!",
     unitLabels: {
       days: "Días",

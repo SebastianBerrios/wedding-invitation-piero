@@ -4,10 +4,15 @@ import { Countdown } from "@/components/interactive/Countdown";
 
 /**
  * Section 2 of 7: the letter is its own block (headed by `letter.heading`),
- * followed by the countdown as its own labeled sub-block (`h3`, using
- * `letter.countdownHeading`, "Faltan") — matching the reference's grouping
- * and fixing Defect 4 (the section's `h2` used to be "Faltan", which
- * described only the countdown, not the letter paragraphs it sat above).
+ * followed by the countdown as its own labeled sub-block — matching the
+ * reference's grouping and fixing Defect 4 (the section's `h2` used to be
+ * "Faltan", which described only the countdown, not the letter paragraphs
+ * it sat above).
+ *
+ * The sub-block's `h3` label now lives INSIDE `Countdown` itself (not here)
+ * so it can swap from `letter.countdownHeading` ("Faltan") to
+ * `letter.countdownReachedHeading` once the countdown reaches `isPast` —
+ * this section stays a server component and renders no countdown state.
  */
 export function LetterSection() {
   const { letter } = invitationConfig;
@@ -28,12 +33,7 @@ export function LetterSection() {
         ))}
       </div>
 
-      <div className="flex flex-col items-center gap-3">
-        <h3 className="font-caps text-sm uppercase tracking-caps text-ink">
-          {letter.countdownHeading}
-        </h3>
-        <Countdown />
-      </div>
+      <Countdown />
     </section>
   );
 }

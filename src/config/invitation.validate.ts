@@ -300,6 +300,16 @@ export function validateInvitationConfig(
     errors.push({ path: "letter.heading", message: "must be non-empty" });
   }
 
+  // 19. letter.countdownReachedHeading non-empty (replaces countdownHeading
+  // once the countdown reaches isPast; must stay coherent with
+  // countdownReachedLabel — see invitation.types.ts)
+  if (!nonEmpty(config.letter.countdownReachedHeading)) {
+    errors.push({
+      path: "letter.countdownReachedHeading",
+      message: "must be non-empty",
+    });
+  }
+
   // 16. eventDetails.heading non-empty (the Event Details section's own h2,
   // distinct from itinerary.heading which labels only the itinerary sub-block)
   if (!nonEmpty(config.eventDetails.heading)) {

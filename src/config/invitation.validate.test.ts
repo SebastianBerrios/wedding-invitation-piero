@@ -44,6 +44,7 @@ const validConfig: InvitationConfig = {
     heading: "Nuestra Historia",
     paragraphs: ["Con el corazón lleno de alegría."],
     countdownHeading: "Faltan",
+    countdownReachedHeading: "¡Hoy!",
     countdownReachedLabel: "¡Ya llegó el gran día!",
     unitLabels: { days: "Días", hours: "Horas", minutes: "Minutos", seconds: "Segundos" },
   },
@@ -368,6 +369,15 @@ describe("validateInvitationConfig", () => {
     const errors = validateInvitationConfig(config);
     expect(
       errors.some((e) => e.path === "rsvp.guestCountInvalidHint"),
+    ).toBe(true);
+  });
+
+  it("19. rejects a blank letter.countdownReachedHeading (the celebration-state heading label)", () => {
+    const config = clone();
+    config.letter.countdownReachedHeading = "   ";
+    const errors = validateInvitationConfig(config);
+    expect(
+      errors.some((e) => e.path === "letter.countdownReachedHeading"),
     ).toBe(true);
   });
 

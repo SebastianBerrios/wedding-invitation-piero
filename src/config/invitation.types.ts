@@ -60,6 +60,12 @@ export interface LetterConfig {
   paragraphs: readonly string[];
   /** e.g. "Faltan" — labels the countdown sub-block only, not the section. */
   countdownHeading: string;
+  /**
+   * Replaces `countdownHeading` once the countdown reaches `isPast`, e.g.
+   * "¡Hoy!" — MUST read coherently alongside `countdownReachedLabel` (never
+   * "Faltan" ["time remaining"] paired with an arrival message).
+   */
+  countdownReachedHeading: string;
   /** e.g. "¡Ya llegó el gran día!" */
   countdownReachedLabel: string;
   unitLabels: LetterUnitLabels;

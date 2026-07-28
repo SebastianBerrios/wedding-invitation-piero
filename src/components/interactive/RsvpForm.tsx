@@ -75,7 +75,7 @@ export function RsvpForm() {
           placeholder={rsvp.namePlaceholder}
           aria-invalid={nameInvalid ? "true" : undefined}
           aria-describedby={nameInvalid ? errorId : undefined}
-          className="rounded-card border border-body bg-transparent px-3 py-2 font-serif text-body placeholder:text-body/60"
+          className="min-h-11 rounded-card border border-body bg-transparent px-3 py-2 font-serif text-body placeholder:text-body/60"
         />
       </label>
 
@@ -92,7 +92,7 @@ export function RsvpForm() {
           onChange={(event) => setGuestCountRaw(event.target.value)}
           aria-invalid={guestCountInvalid ? "true" : undefined}
           aria-describedby={guestCountInvalid ? errorId : undefined}
-          className="rounded-card border border-body bg-transparent px-3 py-2 font-serif text-body"
+          className="min-h-11 rounded-card border border-body bg-transparent px-3 py-2 font-serif text-body"
         />
       </label>
 
@@ -106,7 +106,7 @@ export function RsvpForm() {
           onChange={(event) => setNote(event.target.value)}
           placeholder={rsvp.notePlaceholder}
           rows={3}
-          className="rounded-card border border-body bg-transparent px-3 py-2 font-serif text-body placeholder:text-body/60"
+          className="min-h-11 rounded-card border border-body bg-transparent px-3 py-2 font-serif text-body placeholder:text-body/60"
         />
       </label>
 

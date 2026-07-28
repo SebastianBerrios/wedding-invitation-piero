@@ -65,11 +65,25 @@ export function Countdown() {
     };
   }, []);
 
-  const { unitLabels, countdownReachedLabel } = invitationConfig.letter;
+  const {
+    unitLabels,
+    countdownHeading,
+    countdownReachedHeading,
+    countdownReachedLabel,
+  } = invitationConfig.letter;
 
+  // `parts` is `null` on the server AND on the first client render, so the
+  // pre-wedding heading is what SSR and the first client render both emit —
+  // the label only swaps to the reached heading after mount, once a real
+  // tick reports `isPast: true` (never during/at hydration).
   if (parts?.isPast) {
     return (
-      <p className="font-caps text-2xl text-ink">{countdownReachedLabel}</p>
+      <div className="flex flex-col items-center gap-3">
+        <h3 className="font-caps text-sm uppercase tracking-caps text-ink">
+          {countdownReachedHeading}
+        </h3>
+        <p className="font-caps text-2xl text-ink">{countdownReachedLabel}</p>
+      </div>
     );
   }
 
@@ -81,22 +95,27 @@ export function Countdown() {
   ];
 
   return (
-    <div
-      aria-hidden="true"
-      className="flex items-start justify-center gap-4 sm:gap-6"
-    >
-      {units.map((unit) => (
-        <div key={unit.key} className="flex flex-col items-center gap-1">
-          <span
-            className={`inline-block text-center font-caps text-3xl tabular-nums text-ink ${UNIT_WIDTHS[unit.key]}`}
-          >
-            {parts ? padUnit(parts[unit.key]) : "--"}
-          </span>
-          <span className="font-caps text-xs uppercase tracking-caps text-body">
-            {unit.label}
-          </span>
-        </div>
-      ))}
+    <div className="flex flex-col items-center gap-3">
+      <h3 className="font-caps text-sm uppercase tracking-caps text-ink">
+        {countdownHeading}
+      </h3>
+      <div
+        aria-hidden="true"
+        className="flex items-start justify-center gap-4 sm:gap-6"
+      >
+        {units.map((unit) => (
+          <div key={unit.key} className="flex flex-col items-center gap-1">
+            <span
+              className={`inline-block text-center font-caps text-3xl tabular-nums text-ink ${UNIT_WIDTHS[unit.key]}`}
+            >
+              {parts ? padUnit(parts[unit.key]) : "--"}
+            </span>
+            <span className="font-caps text-xs uppercase tracking-caps text-body">
+              {unit.label}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
