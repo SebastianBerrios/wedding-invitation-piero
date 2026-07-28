@@ -46,6 +46,31 @@
   --animate-card-rise: card-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) 1150ms forwards;
 }
 
+/*
+ * Base structural rules for the three animated envelope wrapper elements
+ * (design §9, work unit 8a). The `--animate-*` tokens above only supply
+ * the keyframe/timing; `perspective` on the container and
+ * `transform-style: preserve-3d` on the flap are what make `rotateX` read
+ * as a genuine 3D hinge instead of a flat skew.
+ */
+.envelope {
+  perspective: 1200px;
+}
+
+.envelope-flap {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.envelope-card {
+  will-change: transform;
+}
+
+.envelope-seal {
+  animation: seal-fall 420ms ease-in 220ms forwards;
+}
+
 @keyframes flap-open {
   from {
     transform: rotateX(0deg);
