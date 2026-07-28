@@ -25,14 +25,24 @@ export function HeroSection() {
       id="hero"
       className="relative flex min-h-svh flex-col items-center justify-center gap-8 px-gutter py-section text-center lg:gap-10"
     >
-      {/* Corner botanical ornaments (design §9/work unit 8b), purely decorative. */}
+      {/*
+        Corner botanical ornaments (design §9/work unit 8b), purely
+        decorative. Opacity raised from the previous 40 to 55 (corrective
+        pass, Defect 5) — the redrawn `Sprig` now has confident filled
+        leaves rather than a thin scratchy stroke, so it can carry a bit
+        more presence without competing with the envelope. Base size
+        shrunk from h-24/w-14 to h-14/w-8 (measured via
+        `getBoundingClientRect`): the wider landscape envelope's card now
+        extends closer to the section edges at 320-390px, and the larger
+        size visually collided with the card's corners at those widths.
+      */}
       <Sprig
         variant="eucalyptus"
-        className="pointer-events-none absolute left-0 top-6 h-24 w-14 opacity-40 lg:h-32 lg:w-20"
+        className="pointer-events-none absolute left-0 top-6 h-[3.5rem] w-[2rem] opacity-55 lg:h-32 lg:w-20"
       />
       <Sprig
         variant="olive"
-        className="pointer-events-none absolute right-0 top-6 h-24 w-14 -scale-x-100 opacity-40 lg:h-32 lg:w-20"
+        className="pointer-events-none absolute right-0 top-6 h-[3.5rem] w-[2rem] -scale-x-100 opacity-55 lg:h-32 lg:w-20"
       />
 
       <Envelope>
@@ -47,23 +57,26 @@ export function HeroSection() {
         </h2>
 
         {/*
-          Fix (Defect 1 — CRITICAL horizontal overflow, carried over): each
-          name is its own full-width block (bride / & / groom stacked,
-          matching the reference), with `break-words` as a safety net so an
-          unusually long real name wraps instead of overflowing. Explicit
-          `{" "}` space text nodes between the blocks keep the raw DOM text
-          content (and therefore the accessible-name computation) reading
-          "Bride & Groom" rather than concatenating the three blocks with no
-          separator.
+          Fix (Defect 3, corrective pass): each name is its own full-width
+          block (bride / & / groom stacked, matching the reference), sized
+          via `.envelope-name` (globals.css) — a `clamp()` in container
+          query units tied to the CARD's own width, not the viewport, with
+          `hyphens: none` and `white-space: nowrap` so a name up to 14
+          characters renders on ONE line instead of hyphen-breaking
+          mid-word (the previous `break-words` utility is exactly what
+          caused "NOMBRE_NOV / IA"). Explicit `{" "}` space text nodes
+          between the blocks keep the raw DOM text content (and therefore
+          the accessible-name computation) reading "Bride & Groom" rather
+          than concatenating the three blocks with no separator.
         */}
-        <h1 className="flex w-full flex-col gap-0.5 font-script leading-none text-ink">
-          <span className="block w-full break-words text-2xl">
+        <h1 className="flex w-full flex-col gap-1 font-script text-ink">
+          <span className="envelope-name block w-full">
             {couple.brideFirstName}
           </span>{" "}
           <span className="block w-full font-serif text-xs italic text-ink">
             {hero.ampersand}
           </span>{" "}
-          <span className="block w-full break-words text-2xl">
+          <span className="envelope-name block w-full">
             {couple.groomFirstName}
           </span>
         </h1>

@@ -65,11 +65,24 @@
 
 .envelope-card {
   will-change: transform;
+  /*
+   * Corrective fix (Defect 3): establishes an inline-size containment
+   * context so the couple-name script size (`.envelope-name`, below) can
+   * be expressed in container query units (`cqi`) — tied to the CARD's own
+   * rendered width, not the viewport. A `vw`-based clamp tracks the
+   * viewport only, which drifts from the card's actual width whenever the
+   * envelope hits its `max-w` cap or the section gutter changes the
+   * card's proportion of the viewport.
+   */
+  container-type: inline-size;
+  container-name: envelope-card;
 }
 
-.envelope-seal {
-  animation: seal-fall 420ms ease-in 220ms forwards;
-}
+/*
+ * The seal is a static, always-visible medallion (Defect 6) — no longer an
+ * animated "breaks and falls away" effect. It sits at the apex in every
+ * state: closed, open, and under reduced motion.
+ */
 
 @keyframes flap-open {
   from {
@@ -86,14 +99,7 @@
     transform: translateY(0) scale(0.985);
   }
   to {
-    transform: translateY(-38%) scale(1);
-  }
-}
-
-@keyframes seal-fall {
-  to {
-    transform: translateY(14px) rotate(-8deg);
-    opacity: 0;
+    transform: translateY(-64%) scale(1);
   }
 }
 
@@ -104,37 +110,69 @@
   }
   .envelope-card {
     animation: none;
-    transform: translateY(-38%);
-  }
-  .envelope-seal {
-    animation: none;
-    opacity: 0;
+    transform: translateY(-64%);
   }
 }
 
 /*
- * Watercolor background recipe (design §9, work unit 8b): layered CSS
- * radial gradients only — cheap, GPU-friendly, no live filter. The bounded
- * `feDisplacementMap` "bleed" ellipses and the pre-rendered grain tile live
- * in `WatercolorBackground.tsx`/`GrainOverlay.tsx` (self-authored SVG).
+ * Couple-name script sizing (Defect 3). Fluid via container query units
+ * (`cqi`, resolved against `.envelope-card`'s own inline size — see
+ * `container-type` above), not viewport units, so a name up to 14
+ * characters fits on ONE line at every card width the envelope can render,
+ * from a 320px viewport up to the envelope's `max-w` cap on desktop.
+ * `hyphens: none` plus `white-space: nowrap` (over `overflow-wrap:
+ * break-word`) — this is a deliberate reversal of the previous
+ * `break-words` utility, which is exactly what produced the mid-word
+ * "NOMBRE_NOV / IA" break: a card that hyphen-breaks a name is broken
+ * regardless of placeholder length.
+ */
+.envelope-name {
+  /*
+   * Coefficient measured empirically (Playwright `getBoundingClientRect`/
+   * `scrollWidth` against the rendered card at 320/390/1440px, see the
+   * corrective apply-progress notes), then given a safety margin so a
+   * 14-character name — not just the 12-character placeholder — stays
+   * under the card's available inner width at every measured breakpoint.
+   */
+  font-size: clamp(0.75rem, 6.5cqi, 2rem);
+  line-height: 1;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+/*
+ * Backdrop wash recipe (design §9, work unit 8b; retuned by the corrective
+ * pass, Defect 4). Four low-intensity, warm-toned corner washes plus a base
+ * vertical gradient — no gray cast, no olive-heavy mixing at high
+ * percentages (the previous recipe's 20-26% mixes, combined with the now-
+ * removed blurred SVG ellipses, is what read as "smudges"). Percentages
+ * kept low (6-14%) and radii kept fairly tight so the effect stays a barely
+ * -there paper warmth, not a visible shape.
  */
 .watercolor {
   background-color: var(--color-surface);
   background-image:
     radial-gradient(
-      120% 80% at 12% -8%,
-      color-mix(in oklab, var(--color-rule) 26%, transparent),
-      transparent 62%
+      65% 55% at 6% 4%,
+      color-mix(in oklab, var(--color-rule) 12%, transparent),
+      transparent 70%
     ),
     radial-gradient(
-      90% 70% at 100% 6%,
-      color-mix(in oklab, var(--color-body) 10%, transparent),
-      transparent 55%
+      60% 50% at 98% 8%,
+      color-mix(in oklab, var(--color-surface-warm) 55%, transparent),
+      transparent 65%
     ),
     radial-gradient(
-      70% 60% at 50% 108%,
-      color-mix(in oklab, var(--color-rule) 20%, transparent),
-      transparent 60%
+      55% 50% at 94% 96%,
+      color-mix(in oklab, var(--color-rule) 10%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      50% 45% at 4% 98%,
+      color-mix(in oklab, var(--color-body) 6%, transparent),
+      transparent 68%
     ),
     linear-gradient(
       180deg,
