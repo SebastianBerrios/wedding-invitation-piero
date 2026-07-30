@@ -43,14 +43,20 @@ export function HeroSongButton() {
         // regression (audit.mjs reports every text node under 14px).
         //
         // `text-ink`, not `text-body`. This line sits directly on the hero's
-        // full-strength watercolor floral, and MEASURING the composited pixels
+        // full-strength floral backdrop, and MEASURING the composited pixels
         // behind it (scratchpad/bg-contrast.mjs, which hides the text and
         // samples the darkest background pixel inside its box) showed
-        // `--color-body` at 4.39:1 over the densest bloom — a real WCAG AA
-        // failure. `audit.mjs` could not see it because it computes contrast
-        // against the flat `body` background colour, and axe reported it only
-        // as `incomplete` ("background could not be determined"), not as a
-        // violation. `--color-ink` measures 11:1 against the same pixels.
+        // `--color-body` at 4.39:1 over the densest bloom of the self-authored
+        // SVG floral — a real WCAG AA failure. `audit.mjs` could not see it
+        // because it computes contrast against the flat `body` background
+        // colour, and axe reported it only as `incomplete` ("background could
+        // not be determined"), not as a violation.
+        //
+        // The photographed `background-main.png` that replaced that floral is
+        // DARKER still, so this fix became more load-bearing, not less: over the
+        // hero's lightly-veiled painting `--color-ink` re-measures 7.55:1 while
+        // `--color-body` cannot clear 4.5:1 at any veil worth shipping (see
+        // `--page-veil` in globals.css). Do not "restore" the body colour here.
         className="font-caps text-sm uppercase tracking-eyebrow text-ink"
       >
         {isError ? audio.errorLabel : hero.songPrompt}

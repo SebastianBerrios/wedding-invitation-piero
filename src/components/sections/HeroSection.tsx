@@ -1,6 +1,5 @@
 import { invitationConfig } from "@/config/invitation";
 import { Envelope } from "@/components/decor/Envelope";
-import { WatercolorFloral } from "@/components/decor/WatercolorBackground";
 import { HeroSongButton } from "@/components/interactive/HeroSongButton";
 
 /**
@@ -34,29 +33,13 @@ export function HeroSection() {
       className="relative flex min-h-svh flex-col items-center justify-center gap-8 px-gutter py-10 text-center lg:gap-10 lg:py-14"
     >
       {/*
-        Hero-strength instance of the SAME watercolor floral that the page-wide
-        fixed backdrop paints (VISUAL RESTYLE pass, target item 1). Two
-        instances of one artwork, not two artworks: the hero reads prominent,
-        the sections below read subtler, and because the geometry is identical
-        it still reads as one sheet of paper.
-
-        The two tiny corner `Sprig` ornaments that used to sit here were
-        REMOVED, not kept alongside: once real large-scale florals exist they
-        are redundant, and having both is exactly the "two competing botanical
-        registers" the restyle brief called out. `Sprig` is still used as a
-        section divider elsewhere on the page.
-
-        `-z-10` (not `z-0`) is load-bearing. `#hero` is `position: relative`
-        with `z-index: auto`, so it is NOT a stacking context and this child
-        participates in the root one — a negative z-index paints it above the
-        root background but BELOW all in-flow content. With `z-0` it would
-        paint above the non-positioned `<button>` and scroll hint, since
-        positioned elements outrank in-flow siblings.
+        The hero-strength instance of the self-authored SVG floral that used to
+        mount here was DELETED along with the artwork itself. `PageBackground`
+        now paints one real photographed watercolour for the whole page, so a
+        second, stronger copy of it in the hero would only re-introduce the
+        seam that appears the moment the hero scrolls away from the `fixed`
+        layer behind it.
       */}
-      <WatercolorFloral
-        intensity="hero"
-        className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
-      />
 
       <Envelope monogram={couple.monogram}>
         {/*
@@ -143,8 +126,10 @@ export function HeroSection() {
       {/*
         `text-ink`, not `text-body`, for the same measured reason as the song
         prompt: over the hero's full-strength floral, `--color-body` measured
-        4.46:1 at 390px — below AA — while `--color-ink` measures 11:1. See
-        scratchpad/bg-contrast.mjs.
+        4.46:1 at 390px against the SVG floral — below AA — and cannot clear
+        4.5:1 at all against the photographed backdrop that replaced it, at any
+        veil worth shipping. `--color-ink` re-measures 8.78:1 at 390 and 9.03:1
+        at 1440. See scratchpad/bg-contrast.mjs and `--page-veil` in globals.css.
       */}
       <p className="font-serif text-sm text-ink lg:text-base">
         {hero.scrollHint}

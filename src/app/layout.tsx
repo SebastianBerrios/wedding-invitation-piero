@@ -6,8 +6,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { StickyMusicToggle } from "@/components/interactive/StickyMusicToggle";
-import { WatercolorBackground } from "@/components/decor/WatercolorBackground";
-import { GrainOverlay } from "@/components/decor/GrainOverlay";
+import { PageBackground } from "@/components/decor/PageBackground";
 
 // Self-hosted (SIL OFL 1.1) via next/font — see ASSETS.md for provenance.
 // Hoisted to module scope so the font files are fetched/subset once at
@@ -99,16 +98,17 @@ export default function RootLayout({
           }}
         />
 
-        <WatercolorBackground />
+        <PageBackground />
 
         {children}
 
         {/*
-          Grain sits ABOVE content (mix-blend-mode: multiply reads against
-          everything painted below it) but is pointer-events-none so it
-          never intercepts clicks/taps.
+          `GrainOverlay` used to sit here, multiplying a fine noise tile over
+          everything for paper tooth. It was DELETED with the SVG floral:
+          `background-main.png` is a real cold-pressed watercolour and already
+          carries its own grain, so a second grayscale multiply over it only
+          desaturated the pigment it was supposed to enrich.
         */}
-        <GrainOverlay />
 
         <StickyMusicToggle />
       </body>
