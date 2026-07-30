@@ -407,6 +407,36 @@ describe("validateInvitationConfig", () => {
       },
     ]);
   });
+
+  /**
+   * The character cap alone is not sufficient. `.envelope-name` sizes the hero
+   * script as `160cqi / --name-length`, so the size depends on the character
+   * COUNT while the rendered width depends on which characters they are — and
+   * in a script face a capital is roughly twice as wide as a lowercase letter.
+   * Measured with a `Range` over the live text node (scratchpad/name-cap.mjs):
+   * at 12 characters `Buenaventura` renders at 80% of the card's content box
+   * but `MARIAJOSEFAX` renders at 130%, overflowing. `white-space: nowrap`
+   * means that overflow stays INSIDE the card, where `audit.mjs` — which only
+   * measures horizontal overflow past the viewport edge — cannot see it. So it
+   * has to be caught here.
+   */
+  it("rejects an ALL-CAPS first name that fits the character cap but overflows the card", () => {
+    const config = clone();
+
+    // 12 characters, mixed case: measured at ~80% of the content box. Legal.
+    config.couple.brideFirstName = "Buenaventura";
+    expect(validateInvitationConfig(config)).toEqual([]);
+
+    // 12 characters, all caps: measured at ~130% of the content box.
+    config.couple.brideFirstName = "MARIAJOSEFAX";
+    expect(validateInvitationConfig(config)).toEqual([
+      {
+        path: "couple.brideFirstName",
+        message:
+          "renders too wide for the hero card — uppercase letters are about twice the width of lowercase in the script face, so use fewer characters or Title Case",
+      },
+    ]);
+  });
 });
 
 describe("findPlaceholders", () => {

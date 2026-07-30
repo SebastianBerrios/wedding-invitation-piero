@@ -27,6 +27,45 @@ const ITINERARY_ICONS = new Set([
 ]);
 
 /**
+ * Width budget for a hero-card first name, in "narrow character" units.
+ *
+ * `.envelope-name` sizes the script from the raw character COUNT
+ * (`160cqi / --name-length`) while the rendered width depends on WHICH
+ * characters those are. Measured with a `Range` over the live rendered text
+ * node at 320 / 390 / 1440 (scratchpad/name-cap.mjs), a capital in Pinyon
+ * Script renders about twice as wide as a lowercase letter — the swash entry
+ * strokes are what cost the space. So a capital counts as two units.
+ *
+ * Calibrated against real measurements rather than picked:
+ *   FIT  Ana 4u, Cielo/Piero 6u, Guadalupe 10u, Inmaculada 11u,
+ *        Maximiliano 12u, Buenaventura 13u  (all measured at 64-85% of the
+ *        card's content box)
+ *   OVER MARIAJOSEFAX 24u, MMMMMMMMMMMM 24u  (measured at 130% and 176%)
+ * A budget of 14 separates them with margin at every breakpoint.
+ *
+ * This is deliberately a HEURISTIC for realistic names, not a renderer. It
+ * does not catch adversarial input built from the single widest glyph in the
+ * face (`MMMM`, `Wwwwwwwwwwww`), because doing that properly would mean
+ * shipping per-glyph advance widths into a config validator. Those are not
+ * names; the cases this protects against are a real ALL-CAPS name and the
+ * ALL-CAPS placeholder sentinels this config shipped with.
+ */
+const MAX_SCRIPT_WIDTH_UNITS = 14;
+
+/** Width of `name` in narrow-character units: uppercase counts double. */
+function scriptWidthUnits(name: string): number {
+  let units = 0;
+  for (const char of name) {
+    // `toLowerCase() !== char` detects a cased uppercase letter without
+    // assuming ASCII, so Á/É/Í/Ó/Ú/Ñ count as uppercase too. Digits, spaces
+    // and punctuation are unaffected by casing and fall through to the narrow
+    // weight, which is correct for them in this face.
+    units += char.toLowerCase() !== char ? 2 : 1;
+  }
+  return units;
+}
+
+/**
  * Normalizes a phone number to a bare digit string for length validation
  * only (mirrors the behavior of `lib/whatsapp.ts`'s `normalizePhone`,
  * duplicated deliberately here so this validator stays dependency-free
@@ -70,18 +109,32 @@ export function validateInvitationConfig(
   }
 
   // 1b. couple.{bride,groom}FirstName length cap.
-  // `.envelope-name` in globals.css sizes the hero script at `18cqi` with
-  // `white-space: nowrap`, tuned to the real names. A longer name would
-  // overflow the envelope card horizontally, and an overflow contained inside
-  // the card does not necessarily cross the viewport edge, so the Playwright
-  // audit can miss it. Guard it here instead. Raising this cap REQUIRES
-  // lowering the coefficient in globals.css.
+  // `.envelope-name` in globals.css sizes the hero script as
+  // `160cqi / var(--name-length)` with `white-space: nowrap`, where
+  // `--name-length` is the longer first name (set by `HeroSection` from this
+  // config). Because the coefficient is divided by the length, the names keep
+  // a constant ~70% of the card's content box at ANY length — so this cap is
+  // no longer tied to one hand-tuned coefficient the way it used to be.
+  // What it still guards is the FLOOR: past roughly 12 characters the divided
+  // size drops below the `clamp()` minimum (1.25rem) at a 320px viewport, and
+  // from there a longer name overflows the card. `nowrap` means it would
+  // overflow INSIDE the card without crossing the viewport edge, where
+  // `audit.mjs` (horizontal-overflow only) cannot see it — hence a data-layer
+  // guard rather than a visual one. Verified by measuring synthetic 12- and
+  // 14-character names with a `Range` over the rendered text node.
   const MAX_FIRST_NAME_LENGTH = 12;
   for (const field of ["brideFirstName", "groomFirstName"] as const) {
-    if (config.couple[field].trim().length > MAX_FIRST_NAME_LENGTH) {
+    const name = config.couple[field].trim();
+    if (name.length > MAX_FIRST_NAME_LENGTH) {
       errors.push({
         path: `couple.${field}`,
         message: `must be ${MAX_FIRST_NAME_LENGTH} characters or fewer to fit the hero card at its current type scale`,
+      });
+    } else if (scriptWidthUnits(name) > MAX_SCRIPT_WIDTH_UNITS) {
+      errors.push({
+        path: `couple.${field}`,
+        message:
+          "renders too wide for the hero card — uppercase letters are about twice the width of lowercase in the script face, so use fewer characters or Title Case",
       });
     }
   }
