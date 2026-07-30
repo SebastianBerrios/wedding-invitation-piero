@@ -74,10 +74,13 @@ export function EventDetailsSection() {
               key={`${row.time}-${row.label}`}
               className="flex items-baseline justify-between gap-4 border-b border-rule/40 pb-2"
             >
-              <span className="font-caps text-sm tabular-nums text-ink">
+              {/* `shrink-0` + `whitespace-nowrap`: a long label (e.g. a full
+                  parish name) otherwise squeezes this column until the time
+                  itself wraps ("1:30" / "PM") at 320px. */}
+              <span className="shrink-0 whitespace-nowrap font-caps text-sm tabular-nums text-ink">
                 {row.time}
               </span>
-              <span className="font-serif text-body lg:text-lg">
+              <span className="text-right font-serif text-body lg:text-lg">
                 {row.label}
               </span>
             </li>

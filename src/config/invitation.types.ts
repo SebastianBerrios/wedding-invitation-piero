@@ -81,7 +81,7 @@ export interface FamilyConfig {
   groups: readonly FamilyGroup[];
 }
 
-export type VenueKind = "ceremony" | "reception";
+export type VenueKind = "ceremony" | "civil" | "reception";
 
 export interface VenueConfig {
   kind: VenueKind;

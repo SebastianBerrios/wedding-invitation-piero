@@ -12,26 +12,26 @@ export const invitationConfig = {
   meta: {
     title: "NOMBRE_NOVIA & NOMBRE_NOVIO — Nuestra boda",
     description:
-      "Acompáñanos a celebrar el amor de NOMBRE_NOVIA y NOMBRE_NOVIO el 26 de diciembre de 2026.",
+      "Acompáñanos a celebrar el amor de NOMBRE_NOVIA y NOMBRE_NOVIO el 10 de octubre de 2026.",
     locale: "es_PE",
     siteName: "NOMBRE_NOVIA & NOMBRE_NOVIO",
   },
   couple: {
     brideFirstName: "NOMBRE_NOVIA",
-    brideFullName: "NOMBRE_NOVIA APELLIDOS",
+    brideFullName: "NOMBRE_NOVIA Sologuren Rosales",
     groomFirstName: "NOMBRE_NOVIO",
-    groomFullName: "NOMBRE_NOVIO APELLIDOS",
+    groomFullName: "NOMBRE_NOVIO Berríos Gómez",
     monogram: "NN",
   },
   event: {
-    isoInstant: "2026-12-26T11:00:00-05:00",
+    isoInstant: "2026-10-10T13:30:00-05:00",
     timeZoneLabel: "America/Lima",
     display: {
-      day: "26",
-      month: "DICIEMBRE",
+      day: "10",
+      month: "OCTUBRE",
       year: "2026",
       weekday: "SÁBADO",
-      time: "11:00 am",
+      time: "1:30 pm",
     },
   },
   hero: {
@@ -61,56 +61,65 @@ export const invitationConfig = {
     groups: [
       {
         title: "Padres de la Novia",
-        names: ["NOMBRE_MADRE_NOVIA", "NOMBRE_PADRE_NOVIA"],
+        names: ["Andrés Sologuren", "Erika Rosales"],
       },
       {
         title: "Padres del Novio",
-        names: ["NOMBRE_MADRE_NOVIO", "NOMBRE_PADRE_NOVIO"],
+        names: ["Humberto Berríos", "Gabriela Gómez"],
       },
       {
         title: "Padrinos",
-        names: ["NOMBRE_PADRINO", "NOMBRE_MADRINA"],
+        names: ["Salvador Cerpa", "Marilú Berríos"],
       },
     ],
   },
   venues: {
     ceremony: {
       kind: "ceremony",
-      label: "CEREMONIA RELIGIOSA",
-      name: "IGLESIA_NOMBRE",
+      label: "MATRIMONIO RELIGIOSO",
+      name: "Parroquia Nuestra Señora de la Paz",
       address: "DIRECCION_IGLESIA, CIUDAD_PLACEHOLDER",
-      mapUrl: "https://maps.google.com/?q=IGLESIA_NOMBRE",
-      mapLinkLabel: "Ver ubicación",
-      time: "11:00 am",
-    },
-    reception: {
-      kind: "reception",
-      label: "RECEPCIÓN",
-      name: "LOCAL_RECEPCION_NOMBRE",
-      address: "DIRECCION_RECEPCION, CIUDAD_PLACEHOLDER",
-      mapUrl: "https://maps.google.com/?q=LOCAL_RECEPCION_NOMBRE",
+      mapUrl:
+        "https://maps.google.com/?q=Parroquia+Nuestra+Se%C3%B1ora+de+la+Paz",
       mapLinkLabel: "Ver ubicación",
       time: "1:30 pm",
+    },
+    // The second venue is the CIVIL ceremony, not a reception. The object key
+    // stays `reception` because it is the structural second-venue slot the
+    // Event Details section renders; `kind` and `label` carry the real meaning.
+    reception: {
+      kind: "civil",
+      label: "MATRIMONIO CIVIL",
+      name: "Majestic",
+      address: "DIRECCION_CIVIL, CIUDAD_PLACEHOLDER",
+      mapUrl: "https://maps.google.com/?q=Majestic",
+      mapLinkLabel: "Ver ubicación",
+      time: "4:00 pm",
     },
   },
   itinerary: {
     heading: "Itinerario",
     rows: [
-      { time: "11:00 am", label: "Ceremonia religiosa", icon: "ceremony" },
-      { time: "1:30 pm", label: "Cóctel de bienvenida", icon: "cocktail" },
-      { time: "4:00 pm", label: "Almuerzo", icon: "dinner" },
-      { time: "5:00 pm", label: "Brindis y baile", icon: "dance" },
+      {
+        time: "1:30 pm",
+        label: "Parroquia Nuestra Señora de La Paz",
+        icon: "ceremony",
+      },
+      { time: "4:00 pm", label: "Matrimonio Civil", icon: "ceremony" },
+      { time: "6:00 pm", label: "Cóctel y cena", icon: "cocktail" },
+      { time: "7:00 pm", label: "¡A bailar! 💃", icon: "dance" },
+      { time: "11:00 pm", label: "Fin de la fiesta" },
     ],
   },
   eventDetails: {
-    heading: "Ceremonia y Recepción",
+    heading: "Ceremonia y Celebración",
   },
   dressCode: {
     eyebrow: "CÓDIGO DE VESTIMENTA",
     scriptWord: "Elegante",
     label: "ELEGANTE",
     note: "Agradecemos evitar los siguientes colores, reservados para la novia y sus damas:",
-    avoidColors: ["Blanco", "Marfil", "Beige claro"],
+    avoidColors: ["Blanco", "Marfil"],
   },
   gifts: {
     eyebrow: "REGALOS",
@@ -134,7 +143,7 @@ export const invitationConfig = {
     heading: "Confirma tu asistencia",
     scriptWord: "RSVP",
     paragraph:
-      "Por favor confirma tu asistencia antes del 01 de diciembre de 2026 para poder organizar todo con cariño.",
+      "Por favor confirma tu asistencia antes del 10 de septiembre de 2026 para poder organizar todo con cariño.",
     nameLabel: "Nombre completo",
     namePlaceholder: "Escribe tu nombre",
     guestCountLabel: "Número de invitados",

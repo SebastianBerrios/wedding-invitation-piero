@@ -360,6 +360,15 @@ const PLACEHOLDER_PATTERNS: readonly RegExp[] = [
   /BANCO_/,
   /^NN$/,
   /000-/,
+  // Sentinels that shipped in the original placeholder config but were not
+  // covered here, so `PRELAUNCH=1` could pass with fake venue data still in
+  // place. Any leftover ALL-CAPS token joined by underscores is a sentinel.
+  /APELLIDOS/,
+  /DIRECCION_/,
+  /CIUDAD_/,
+  /_PLACEHOLDER/,
+  /IGLESIA_/,
+  /LOCAL_/,
 ];
 
 /**

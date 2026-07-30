@@ -408,6 +408,20 @@ describe("findPlaceholders", () => {
     expect(paths).toContain("gifts.accounts[0].bank");
   });
 
+  it("flags venue and surname sentinels that the original patterns missed", () => {
+    const config = clone();
+    config.couple.brideFullName = "Ana APELLIDOS";
+    config.venues.ceremony.address = "DIRECCION_IGLESIA, CIUDAD_PLACEHOLDER";
+    config.venues.reception.name = "LOCAL_RECEPCION_NOMBRE";
+    config.venues.reception.mapUrl = "https://maps.google.com/?q=IGLESIA_NOMBRE";
+
+    const paths = findPlaceholders(config).map((e) => e.path);
+    expect(paths).toContain("couple.brideFullName");
+    expect(paths).toContain("venues.ceremony.address");
+    expect(paths).toContain("venues.reception.name");
+    expect(paths).toContain("venues.reception.mapUrl");
+  });
+
   it("returns no errors for a config with no placeholder sentinels", () => {
     expect(findPlaceholders(validConfig)).toEqual([]);
   });
