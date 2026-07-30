@@ -20,7 +20,16 @@ All three families are self-hosted via `next/font/google` (`src/app/layout.tsx`)
 |---|---|---|---|
 | Cormorant Garamond | Google Fonts (`fonts.google.com/specimen/Cormorant+Garamond`) | SIL Open Font License, Version 1.1 | `OFL.txt` bundled with the family in the [google/fonts](https://github.com/google/fonts) repository (`ofl/cormorantgaramond/OFL.txt`), copyright "the Cormorant Project Authors" |
 | Cormorant SC | Google Fonts (`fonts.google.com/specimen/Cormorant+SC`) | SIL Open Font License, Version 1.1 | `ofl/cormorantsc/OFL.txt` in the same repository, same copyright holder (small-caps variant of the same Cormorant family) |
-| Great Vibes | Google Fonts (`fonts.google.com/specimen/Great+Vibes`) | SIL Open Font License, Version 1.1 | `ofl/greatvibes/OFL.txt`, copyright "The Great Vibes Pro Project Authors" |
+| Pinyon Script | Google Fonts (`fonts.google.com/specimen/Pinyon+Script`) | SIL Open Font License, Version 1.1 | `ofl/pinyonscript/OFL.txt` in the [google/fonts](https://github.com/google/fonts) repository, copyright "Nicole Fally" |
+
+**Great Vibes was REMOVED** during the visual restyle pass and is no longer
+loaded, subset, or shipped. It was replaced by Pinyon Script for the couple's
+names: Great Vibes is a slanted, loopy, near-monoline hand, while the target is
+an upright, high-contrast formal calligraphic script with ornate swash capitals.
+Petit Formal Script and Italianno were also evaluated (screenshotted at 44px and
+64px) and rejected — see `src/app/layout.tsx` for the reasoning. All three
+candidates are SIL OFL 1.1, so the licensing outcome would have been the same
+either way.
 
 SIL OFL 1.1 permits embedding, self-hosting, subsetting, and use in a
 commercial product; it only restricts selling the font file in isolation and
@@ -34,13 +43,16 @@ URL because there is no external source.
 
 | Asset | File | Description |
 |---|---|---|
-| Envelope (pockets, flap, seal, seam shading) | `src/components/decor/Envelope.tsx` | Four-flap "pinwheel" envelope built from hand-written SVG polygons/gradients; the flap-open/card-rise motion is pure CSS (`src/app/globals.css`) |
-| Wax seal | `src/components/decor/Envelope.tsx` (seal group) | Static circular medallion + hand-drawn rose-whorl arcs, `fill`/`stroke` on design tokens only |
-| Monogram | `src/components/decor/Monogram.tsx` | Initials rendered as SVG `<text>` inside a circle, driven by `couple.monogram` |
-| Botanical sprigs (`eucalyptus`, `olive`, `rosebud`) | `src/components/decor/Sprig.tsx` | Three hand-drawn stem + leaf/petal path sets, used as hero corner ornaments and section dividers |
+| Envelope (interior, front face, single flap, fold shading) | `src/components/decor/Envelope.tsx` | Hand-written SVG rects/polygons/gradients: an ivory front face, one large triangular flap hinged at the top edge, and a soft blurred fold shadow. The flap-open/card-rise motion is pure CSS (`src/app/globals.css`). Replaced the earlier four-flap "pinwheel" during the visual restyle pass |
+| White-rose rosette (envelope closure) | `src/components/decor/RoseSeal.tsx` | Three concentric, interleaved rings of one hand-drawn petal path in ivory, with a CSS `drop-shadow()`. Replaced the gold wax disc during the visual restyle pass |
+| Monogram | `src/components/decor/Monogram.tsx` | Initials as SVG `<text>`, driven by `couple.monogram`. Two variants: `medallion` (double-ring badge, used by `src/app/icon.tsx`) and `plain` (letters only, printed on the envelope's front face below the rose) |
+| Card inset hairline frame | `src/components/decor/Envelope.tsx` | Two `aria-hidden` `<span>`s with `--color-rule` borders a few px apart inside the card edge — no image, pure CSS |
+| Botanical sprigs (`eucalyptus`, `olive`, `rosebud`) | `src/components/decor/Sprig.tsx` | Three hand-drawn stem + leaf/petal path sets. Now used only as section dividers (`src/app/page.tsx`); the two hero corner ornaments were removed once the large-scale florals existed |
 | Hairline rule / divider | `src/components/decor/Rule.tsx` | A single hand-drawn line + center diamond |
 | Grain texture | `src/components/decor/GrainOverlay.tsx` | A 220×220 `feTurbulence` noise tile, generated inline as an SVG data URI (no external image file) |
-| Watercolor background wash | `src/app/globals.css` (`.watercolor`) | Pure CSS `radial-gradient`/`linear-gradient` layers using design tokens — no image file, no filter-based bleed layer (removed during the corrective visual pass; see `sdd/wedding-invitation-page/apply-progress`) |
+| Cold-pressed paper mottle | `src/app/globals.css` (`.watercolor-mottle`) | A 320×320 coarse `feTurbulence` tile (`baseFrequency 0.018`, `stitchTiles="stitch"`), inline SVG data URI, repeated as a CSS background — never a live full-viewport filter |
+| Large-scale watercolor floral | `src/components/decor/WatercolorBackground.tsx` | Self-authored inline SVG: two hand-drawn asymmetric rose-petal paths and one lanceolate leaf path, composed into 11 blooms (three concentric jittered petal rings each) plus 12 leaves and 3 haze ellipses on a 1000×1500 canvas. All fills are gradients built from the design tokens; a single `feGaussianBlur` (stdDeviation 4) provides the out-of-focus softening. Mounted twice — once page-wide (`fixed`) and once at hero strength — so the page reads as one sheet of paper |
+| Paper ground gradient | `src/app/globals.css` (`.watercolor`) | A single warm-ivory CSS `linear-gradient` using design tokens — no image file. The four corner `radial-gradient` washes it replaced were removed during the visual restyle pass; they competed with the florals for the same low-contrast register |
 | Play / pause icon | `src/components/ui/PlayPauseIcon.tsx` | Hand-drawn SVG paths, shared by `HeroSongButton` and `StickyMusicToggle` |
 
 ## Favicon
@@ -76,5 +88,6 @@ assets they never were.
 
 - [x] Every file under `public/` has a matching entry above (`public/audio/song.mp3` — the only file remaining there).
 - [x] Every self-authored SVG/CSS graphic component has a matching entry above.
-- [x] `grep -ri "mejorinvitacion"` across the repository (excluding `node_modules`) returns no matches.
-- [x] All three font families are self-hosted via `next/font`, confirmed by network inspection showing zero `fonts.googleapis.com` requests (see `sdd/wedding-invitation-page/apply-progress`, work unit 2).
+- [x] `grep -ri "mejorinvitacion"` across the repository (excluding `node_modules` and `.next`) matches only this document's own prose about the reference — zero matches in `src/`, `public/`, or any config.
+- [x] All three font families are self-hosted via `next/font`, confirmed by network inspection showing zero `fonts.googleapis.com` requests (see `sdd/wedding-invitation-page/apply-progress`, work unit 2). Re-confirmed after the Great Vibes → Pinyon Script swap.
+- [x] No raster image is used anywhere for decoration. The watercolor floral, the rose closure, the envelope, the grain and the mottle are all SVG or CSS authored in this repository, so there is no image asset to license and no extra network request.
