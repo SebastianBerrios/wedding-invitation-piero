@@ -159,8 +159,17 @@ export function Envelope({
           height, exactly like a card being drawn out of an envelope, with the
           excess hidden rather than dangling under it.
         */}
+        {/*
+          `clip-path` trims two extra pixels off the bottom on top of
+          `overflow-hidden`. The front face's fill stops at y=249 of a 250-unit
+          viewBox (the rounded bottom corners need that unit), so the element's
+          final pixel row is unpainted and the card's glyph tips bled through
+          it — measured as ~25 magenta pixels on a single row at 1440, none at
+          390. Clipping instead of extending the fill keeps the rounded corners
+          and the border stroke exactly as drawn.
+        */}
         <div
-          className="absolute inset-x-0 bottom-0 z-10 overflow-hidden"
+          className="absolute inset-x-0 bottom-0 z-10 overflow-hidden [clip-path:inset(0_0_2px_0)]"
           style={{ top: "-300%" }}
         >
           <div className="envelope-card animate-card-rise absolute inset-x-[11%]">
