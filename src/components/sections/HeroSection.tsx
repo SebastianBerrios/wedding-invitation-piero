@@ -23,7 +23,7 @@ export function HeroSection() {
       id="hero"
       /*
         `py-10 lg:py-14` instead of the page-wide `py-section` (up to 8rem):
-        `.envelope`'s `margin-top: 72cqi` already reserves the card's overhang,
+        `.envelope`'s derived `margin-top` already reserves the card's overhang,
         so a further 128px of section padding was pure duplication — it pushed
         the hero to 999px tall at 1440x900, putting the song button and the
         scroll hint below the fold on the most common desktop size. Measured

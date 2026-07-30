@@ -89,10 +89,25 @@
  *   --card-base   : where the card rests, measured up from the envelope's
  *                   bottom edge (its CLOSED position, deep in the pocket)
  *   --card-rise   : how far `card-rise` lifts it, as a share of card height.
- *                   Tuned so roughly the lower THIRD of the card stays behind
- *                   the front face when settled, as in the reference.
- *   --card-hidden : that hidden share, re-expressed against the card's WIDTH
- *                   so it can be used as `padding-bottom` (see below).
+ *                   Tuned so the card's bottom edge settles safely BELOW the
+ *                   V's apex, since a bottom edge visible inside the notch is
+ *                   what makes a card read as floating rather than tucked in.
+ *   --card-hidden : the hidden share re-expressed against the card's WIDTH so
+ *                   it can be used as `padding-bottom` (see below).
+ *
+ * All three were re-derived when the front face's top boundary stopped being a
+ * straight line and became a V (two diagonals from the flap's tip up to the
+ * envelope's top corners — see Envelope.tsx L3). The occluding edge is no
+ * longer horizontal, so every quantity below that used to be a simple
+ * subtraction is now an integral over the notch.
+ *
+ * Shared frame for all of it, in the layers' own viewBox units
+ * (`0 0 400 250`, so 400 units = the envelope's width Ew):
+ *   card       x 44 .. 356 (`inset-x-[11%]`), width 312, height 399.36
+ *   V diagonal from (1, 1) to the apex (200, 157.5): y = 1 + 0.7864 (x - 1)
+ *   at the card's own edge (x = 44) the paper edge is already at y = 34.8,
+ *   while at the card's centre it is at y = 157.5 — a 123-unit spread. THAT
+ *   is the asymmetry every number below has to respect.
  *
  * The card's horizontal inset (`inset-x-[11%]` in Envelope.tsx, i.e. a card
  * 78% of the envelope's width) is the one number NOT a custom property here,
@@ -125,26 +140,67 @@
    */
   --card-base: 4.4cqi;
   /* Start of `card-rise`: fully sunk into the pocket. See the keyframe. */
-  --card-sink: 42%;
-  --card-rise: -28%;
+  --card-sink: 43%;
+  --card-rise: -8%;
   /*
    * The share of the card's height that stays hidden behind the front face
    * once it has risen, expressed as a percentage of the card's WIDTH — CSS
    * percentage padding always resolves against the inline size, never the
    * block size, and the content wrapper uses it as `padding-bottom`.
    *
-   * Derivation, with Ew = envelope width, Eh = 0.625*Ew (aspect 8/5),
-   * Cw = 0.78*Ew and Ch = Cw * 6.4/5 = 0.9984*Ew:
+   * RE-DERIVED for the V. The previous 39% came from a one-line subtraction
+   * that is only valid for a straight cut:
    *   hidden = Eh - (card-base*Eh + |card-rise|*Ch)
-   *          = 0.625 - (0.07*0.625 + 0.28*0.9984) = 0.3018 * Ew
-   *          = 30% of Ch  -> the reference's "lower third overlapped"
-   *   as a share of Cw    = 0.3018 / 0.78 = 39%
+   * With a V the hidden region is a triangle-topped band, deep at the card's
+   * sides (162 units) and shallow at its centre (43 units), so the centre of
+   * the card stays visible far lower down than its sides do. Feeding a
+   * straight-cut number in over-compensates and pushes the text too high.
    *
-   * Without this the card's content centres in its FULL box, half of which is
-   * behind the envelope — which is exactly how the first attempt buried the
-   * groom's name behind the envelope's top edge.
+   * What `padding-bottom` actually has to do is put the CONTENT's centre on
+   * the centroid of the VISIBLE area. With the card's bottom edge at
+   * b = 200.45 (from --card-rise, see the keyframe), y_t = b - 399.36 =
+   * -198.91 for its top edge, and cut(x) = the V diagonal:
+   *
+   *   A_vis = 2 * INT[44..200] (cut(x) - y_t) dx            = 92 061 units^2
+   *   M     =     INT[44..200] (cut(x)^2 - y_t^2) dx        = -4 533 794
+   *   y_c   = M / A_vis = -49.25  ->  149.66 in card-local coords
+   *
+   * (The factor 2 mirrors the half-width integral; the 1/2 from each column's
+   * own centroid cancels it in M. Cross-checked against the straight-cut case,
+   * where the same formulae return exactly the old 39%.)
+   *
+   * Content is centred in the padding box, so its centre sits at
+   * (pt + (Ch - pb)) / 2 with pt = pb_extra = 7% of Cw already applied on both
+   * sides; solving for the extra bottom padding p:
+   *
+   *   p = Ch - 2*y_c = 399.36 - 299.32 = 100.04 units
+   *     as a share of Cw = 100.04 / 312 = 32%
+   *
+   * That centres the content BOX. It is NOT where the ink lands: `line-height:
+   * 1` on a script face leaves the last line's box extending ~33 units below
+   * its ink (neither `Cielo` nor `Piero` has a descender), so a box-centred
+   * block renders visibly ink-high. Measured with scratchpad/v-ink.mjs, which
+   * pixel-scans the ink's bounding box and compares
+   *   gapTop    = ink top    -> the card's top edge
+   *   gapBottom = ink bottom -> the fold AT THE BOTTOM LINE'S OWN x-extent
+   *               (a line of text is bounded by the diagonal above its own
+   *               ends, not by the one at the card's edge, 82 units further
+   *               out: 90.9 vs 34.8)
+   *
+   *   --card-hidden   34    32    30    28    26    24
+   *   gapBottom-gapTop (390) +14.2 +7.2 +1.4 -4.4 -11.4 -17.3
+   *   gapBottom-gapTop (1440)+13.7 +8.0 +0.3 -5.5 -11.3 -17.0
+   *
+   * Both breakpoints cross at 30%, so that is the value: the geometric centroid
+   * less the ~2 points of ink/box asymmetry. The old 39% is 9 points of
+   * over-compensation, exactly as expected from feeding a straight-cut number
+   * into a V-shaped occlusion.
+   *
+   * Hidden area is 26% of the card (was 30% under the straight cut), so the
+   * "lower portion behind the paper" proportion survives even though the
+   * compensation dropped 9 points — that gap IS the V.
    */
-  --card-hidden: 39%;
+  --card-hidden: 30%;
 
   perspective: 1200px;
 
@@ -163,14 +219,18 @@
    * Ch = 0.78*Ew * 6.4/5 = 0.9984*Ew:
    *
    *   overhang = card-base*Eh + Ch - Eh + |card-rise|*Ch
-   *            = 0.07*0.625 + 0.9984 - 0.625 + 0.28*0.9984  (x Ew)
-   *            = 0.697 * Ew
+   *            = 0.07*0.625 + 0.9984 - 0.625 + 0.08*0.9984  (x Ew)
+   *            = 0.497 * Ew
    *
-   * `1cqi` is 1% of Ew (see `.envelope-frame`), so 70cqi is exactly that
+   * `1cqi` is 1% of Ew (see `.envelope-frame`), so 50cqi is exactly that
    * overhang and it tracks the envelope at every width with no media query
    * and no magic pixels. Plus 2cqi of breathing room.
+   *
+   * This was 72cqi while `--card-rise` was -28%. Leaving it there after the V
+   * cut the rise to -8% would have reserved ~69px of dead space above the
+   * envelope at 390px — the derivation is the point, so it moves with the rise.
    */
-  margin-top: 72cqi;
+  margin-top: 52cqi;
 }
 
 .envelope-flap {
@@ -222,17 +282,43 @@
   from {
     /*
      * Positive: the card starts pushed DOWN into the pocket, far enough that
-     * its top edge sits at or below the envelope's top edge and it is
-     * completely hidden by the front face and the closed flap. The excess
-     * below the envelope is clipped by the pocket wrapper in Envelope.tsx.
+     * its top edge sits BELOW the envelope's top edge. That is still the whole
+     * requirement now that the face has a V in it, because the closed FLAP is
+     * a triangle from the top edge down to the same apex, so it covers the
+     * notch exactly (see Envelope.tsx L4) — nothing can show through the V
+     * while it is shut. The excess below the envelope is clipped by the pocket
+     * wrapper in Envelope.tsx.
      *
      *   card top above envelope top, at rest
-     *     = card-base*Eh + Ch - Eh = 0.07*0.625 + 0.9984 - 0.625 = 0.417 Ew
-     *     = 0.417 / 0.9984 = 42% of the card's own height
+     *     = card-base*Eh + Ch - Eh = 0.07*0.625 + 0.9984 - 0.625 = 0.4174 Ew
+     *     = 0.4174 / 0.9984 = 41.8% of the card's own height
+     *
+     * 43%, not the bare 41.8%: the exact figure leaves 0.65px of clearance at
+     * 390px, which is inside anti-aliasing noise, and the only thing that was
+     * hiding the difference was the incidental 0.985 scale. 43% buys ~4px and
+     * costs nothing visible, since the card is hidden here by definition.
      */
     transform: translateY(var(--card-sink)) scale(0.985);
   }
   to {
+    /*
+     * -8%. The binding constraint is NOT how much of the card is covered any
+     * more, it is where the card's BOTTOM EDGE lands relative to the V's apex:
+     * settle above the apex and that edge is visible inside the notch, and the
+     * card reads as a rectangle floating in a hole. So:
+     *
+     *   bottom edge = 250 - card-base*400 + rise*399.36  (viewBox units)
+     *               = 232.4 + rise*399.36
+     *   apex        = 157.5  ->  rise must be shallower than -18.8%
+     *
+     * -8% puts the bottom edge at 200.45, i.e. 43 units clear of the apex and
+     * behind the rose that sits on it, and hides 26% of the card's area — the
+     * same "lower portion tucked in" proportion the straight cut had at -28%.
+     * The V does the occluding now, so the card no longer has to travel that
+     * far to look tucked in; -28% left its bottom edge at 120.6, ABOVE the
+     * apex, which with a real V would have exposed the card's bottom edge in
+     * the middle of the notch.
+     */
     transform: translateY(var(--card-rise)) scale(1);
   }
 }
@@ -288,8 +374,10 @@
    *
    * 160 was tried first and rejected by looking at the render: at ~70% of the
    * content box the two names plus the eyebrow filled the card's VISIBLE
-   * height (only 70% of the card — the rest is behind the envelope) and the
-   * script collided with the inset hairline frame. The card's visible height is
+   * height (then only 70% of the card — the rest was behind the envelope's
+   * straight top edge) and the script collided with the inset hairline frame.
+   * The V gave some of that height back (`--card-hidden` 39% -> 32%), which is
+   * slack, not licence to grow the type. The card's visible height is
    * about 1.12x its width, and two lines of script alone cost 2 x 0.38 x
    * font-size, so name size and vertical air trade against each other directly.
    * 135 is where the names still dominate the card and the frame still breathes.
@@ -320,8 +408,8 @@
  * used to live here was REMOVED. It compensated for the card's `transform`
  * overhang with a hand-measured pixel constant, which had to be re-derived on
  * every type-scale change and did not cover the taller portrait card. The
- * overhang is now reserved in layout by `.envelope`'s `margin-top: 56cqi`
- * (derived above), so the hero needs no viewport-height special case at all.
+ * overhang is now reserved in layout by `.envelope`'s `margin-top` (derived
+ * above), so the hero needs no viewport-height special case at all.
  */
 
 /*
