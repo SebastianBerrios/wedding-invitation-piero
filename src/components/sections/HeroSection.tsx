@@ -61,10 +61,12 @@ export function HeroSection() {
           block (bride / & / groom stacked, matching the reference), sized
           via `.envelope-name` (globals.css) — a `clamp()` in container
           query units tied to the CARD's own width, not the viewport, with
-          `hyphens: none` and `white-space: nowrap` so a name up to 14
-          characters renders on ONE line instead of hyphen-breaking
-          mid-word (the previous `break-words` utility is exactly what
-          caused "NOMBRE_NOV / IA"). Explicit `{" "}` space text nodes
+          `hyphens: none` and `white-space: nowrap` so a name renders on ONE
+          line instead of hyphen-breaking mid-word (the previous
+          `break-words` utility is exactly what caused "NOMBRE_NOV / IA").
+          The type scale was later retuned for the real 5-character names;
+          `invitation.validate.ts` caps first names at the 12 characters this
+          scale can hold. Explicit `{" "}` space text nodes
           between the blocks keep the raw DOM text content (and therefore
           the accessible-name computation) reading "Bride & Groom" rather
           than concatenating the three blocks with no separator.
@@ -73,7 +75,10 @@ export function HeroSection() {
           <span className="envelope-name block w-full">
             {couple.brideFirstName}
           </span>{" "}
-          <span className="block w-full font-serif text-xs italic text-ink">
+          {/* `envelope-ampersand` scales with the card like the names do; a
+              fixed `text-xs` left it at 26% of the 46px name size, reading as
+              a typo between them rather than a deliberate ligature. */}
+          <span className="envelope-ampersand block w-full font-serif italic text-ink">
             {hero.ampersand}
           </span>{" "}
           <span className="envelope-name block w-full">

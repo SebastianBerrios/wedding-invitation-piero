@@ -392,6 +392,21 @@ describe("validateInvitationConfig", () => {
       validateInvitationConfig(longDescription).some((e) => e.path === "meta.description"),
     ).toBe(true);
   });
+
+  it("rejects a first name too long for the hero card type scale", () => {
+    const config = clone();
+    config.couple.groomFirstName = "Maximiliano";
+    expect(validateInvitationConfig(config)).toEqual([]);
+
+    config.couple.groomFirstName = "Maximilianoberto";
+    expect(validateInvitationConfig(config)).toEqual([
+      {
+        path: "couple.groomFirstName",
+        message:
+          "must be 12 characters or fewer to fit the hero card at its current type scale",
+      },
+    ]);
+  });
 });
 
 describe("findPlaceholders", () => {

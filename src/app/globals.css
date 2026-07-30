@@ -99,7 +99,7 @@
     transform: translateY(0) scale(0.985);
   }
   to {
-    transform: translateY(-64%) scale(1);
+    transform: translateY(-46%) scale(1);
   }
 }
 
@@ -110,16 +110,16 @@
   }
   .envelope-card {
     animation: none;
-    transform: translateY(-64%);
+    transform: translateY(-46%);
   }
 }
 
 /*
  * Couple-name script sizing (Defect 3). Fluid via container query units
  * (`cqi`, resolved against `.envelope-card`'s own inline size — see
- * `container-type` above), not viewport units, so a name up to 14
- * characters fits on ONE line at every card width the envelope can render,
- * from a 320px viewport up to the envelope's `max-w` cap on desktop.
+ * `container-type` above), not viewport units, so each name fits on ONE
+ * line at every card width the envelope can render, from a 320px viewport
+ * up to the envelope's `max-w` cap on desktop.
  * `hyphens: none` plus `white-space: nowrap` (over `overflow-wrap:
  * break-word`) — this is a deliberate reversal of the previous
  * `break-words` utility, which is exactly what produced the mid-word
@@ -128,25 +128,67 @@
  */
 .envelope-name {
   /*
-   * Coefficient measured empirically (Playwright `getBoundingClientRect`/
-   * `canvas.measureText` against the rendered card at 320/360/390/1440px —
-   * see the verify-report corrective batch). The floor was raised from
-   * `6.5cqi` (13.08px at 320px, well below body-text size — the couple
-   * names are the page's centerpiece, not fine print) to `7.15cqi`: the
-   * exact single-line ceiling for a worst-case 14-character name measured
-   * at each breakpoint is ~7.79cqi (zero px to spare); `7.15cqi` keeps
-   * ~9% margin below that ceiling at every measured width while
-   * maximizing size. `hyphens: none` plus `white-space: nowrap` (below)
-   * — not `overflow-wrap: break-word` — is what actually prevents
-   * mid-word breaking; this coefficient only controls how LARGE the type
-   * can be before a 14-character name would need to break at all.
+   * Sized against the REAL configured names, not a worst case. The previous
+   * `7.15cqi` was derived when the names were still the 14-character
+   * sentinels `NOMBRE_NOVIA`/`NOMBRE_NOVIO`; once the real 5-character names
+   * landed it rendered them at 14.4px/18.2px/27.2px (320/390/1440) — the
+   * page's centerpiece reading like a footnote, with most of the card empty.
+   *
+   * Measured with a `Range` over the text node — NOT
+   * `getBoundingClientRect` on the element, which returns the full-width
+   * block box and silently reports every name as "99% of the card". The
+   * widest name, `Piero`, is 201 units wide per 100px of font against an
+   * inner card width of 203/256/381px at 320/390/1440.
+   *
+   * `16cqi` (capped at 4rem) puts each name at ~32-36% of the inner width.
+   * The first attempt at `18cqi`/4.5rem was reverted: the taller card made
+   * the composition overflow the TOP of short viewports — clipped by 63px at
+   * 320x640, 36px at 1440x900 and 124px at 1280x720. The card's resting
+   * position is a `transform` (`card-rise`), which does not participate in
+   * layout, so `min-h-svh` on the section cannot grow to absorb it; the rise
+   * was reduced from -64% to -46% in the same pass. Verified with
+   * `scratchpad/vfit.mjs` across 320x640 / 390x844 / 1280x720 / 1440x900 /
+   * 1920x1080. `audit.mjs` only measures HORIZONTAL overflow, so vertical
+   * clipping needs that separate check — do not assume a green audit means
+   * the hero fits.
+   *
+   * `white-space: nowrap` means a LONGER name would overflow the card rather
+   * than wrap, and an overflow inside the card would not necessarily cross
+   * the viewport edge, so `audit.mjs` could miss it. That is guarded at the
+   * data layer instead: `invitation.validate.ts` caps first-name length at
+   * the 12 characters this coefficient can fit. Change one, change the other.
    */
-  font-size: clamp(0.875rem, 7.15cqi, 2.125rem);
+  font-size: clamp(1.75rem, 16cqi, 4rem);
   line-height: 1;
   white-space: nowrap;
   overflow-wrap: normal;
   word-break: normal;
   hyphens: none;
+}
+
+/*
+ * Roughly a third of `.envelope-name`, the proportion the reference card uses
+ * between the two names. Tied to the same container so it tracks the names
+ * instead of drifting at one breakpoint.
+ */
+.envelope-ampersand {
+  font-size: clamp(0.75rem, 6cqi, 1.5rem);
+  line-height: 1;
+}
+
+/*
+ * Short-viewport rescue for the hero. The card's resting position is a
+ * `transform`, which is invisible to layout, so the card overhangs the top of
+ * `min-h-svh` and `justify-center` cannot compensate. Measured clipping before
+ * this rule (scratchpad/vfit.mjs): -42px at 1280x720 and -9px at 320x640,
+ * while 390x844, 1440x900 and 1920x1080 were already fine. Extra top padding
+ * pushes the centered block down; the section may then exceed one viewport,
+ * which is the correct trade — a scroll beats a decapitated card.
+ */
+@media (max-height: 800px) {
+  #hero {
+    padding-top: calc(var(--spacing-section) + 5rem);
+  }
 }
 
 /*

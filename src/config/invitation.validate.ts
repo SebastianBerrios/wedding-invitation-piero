@@ -69,6 +69,23 @@ export function validateInvitationConfig(
     }
   }
 
+  // 1b. couple.{bride,groom}FirstName length cap.
+  // `.envelope-name` in globals.css sizes the hero script at `18cqi` with
+  // `white-space: nowrap`, tuned to the real names. A longer name would
+  // overflow the envelope card horizontally, and an overflow contained inside
+  // the card does not necessarily cross the viewport edge, so the Playwright
+  // audit can miss it. Guard it here instead. Raising this cap REQUIRES
+  // lowering the coefficient in globals.css.
+  const MAX_FIRST_NAME_LENGTH = 12;
+  for (const field of ["brideFirstName", "groomFirstName"] as const) {
+    if (config.couple[field].trim().length > MAX_FIRST_NAME_LENGTH) {
+      errors.push({
+        path: `couple.${field}`,
+        message: `must be ${MAX_FIRST_NAME_LENGTH} characters or fewer to fit the hero card at its current type scale`,
+      });
+    }
+  }
+
   // 2. couple.monogram: 2-3 uppercase letters (Spanish accents allowed)
   if (!MONOGRAM_RE.test(config.couple.monogram)) {
     errors.push({

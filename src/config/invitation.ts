@@ -10,18 +10,18 @@ import type { InvitationConfig } from "@/config/invitation.types";
  */
 export const invitationConfig = {
   meta: {
-    title: "NOMBRE_NOVIA & NOMBRE_NOVIO — Nuestra boda",
+    title: "Cielo & Piero — Nuestra boda",
     description:
-      "Acompáñanos a celebrar el amor de NOMBRE_NOVIA y NOMBRE_NOVIO el 10 de octubre de 2026.",
+      "Acompáñanos a celebrar el amor de Cielo y Piero el 10 de octubre de 2026.",
     locale: "es_PE",
-    siteName: "NOMBRE_NOVIA & NOMBRE_NOVIO",
+    siteName: "Cielo & Piero",
   },
   couple: {
-    brideFirstName: "NOMBRE_NOVIA",
-    brideFullName: "NOMBRE_NOVIA Sologuren Rosales",
-    groomFirstName: "NOMBRE_NOVIO",
-    groomFullName: "NOMBRE_NOVIO Berríos Gómez",
-    monogram: "NN",
+    brideFirstName: "Cielo",
+    brideFullName: "Cielo Sologuren Rosales",
+    groomFirstName: "Piero",
+    groomFullName: "Piero Berríos Gómez",
+    monogram: "PC",
   },
   event: {
     isoInstant: "2026-10-10T13:30:00-05:00",
@@ -78,9 +78,9 @@ export const invitationConfig = {
       kind: "ceremony",
       label: "MATRIMONIO RELIGIOSO",
       name: "Parroquia Nuestra Señora de la Paz",
-      address: "DIRECCION_IGLESIA, CIUDAD_PLACEHOLDER",
+      address: "Buganvillas B-27",
       mapUrl:
-        "https://maps.google.com/?q=Parroquia+Nuestra+Se%C3%B1ora+de+la+Paz",
+        "https://maps.google.com/?q=Parroquia+Nuestra+Se%C3%B1ora+de+la+Paz+Buganvillas+B-27",
       mapLinkLabel: "Ver ubicación",
       time: "1:30 pm",
     },
@@ -91,8 +91,9 @@ export const invitationConfig = {
       kind: "civil",
       label: "MATRIMONIO CIVIL",
       name: "Majestic",
-      address: "DIRECCION_CIVIL, CIUDAD_PLACEHOLDER",
-      mapUrl: "https://maps.google.com/?q=Majestic",
+      address: "Gregorio Albarracín 402",
+      mapUrl:
+        "https://maps.google.com/?q=Majestic+Gregorio+Albarrac%C3%ADn+402",
       mapLinkLabel: "Ver ubicación",
       time: "4:00 pm",
     },
