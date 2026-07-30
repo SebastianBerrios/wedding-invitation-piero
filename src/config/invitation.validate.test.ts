@@ -410,7 +410,7 @@ describe("validateInvitationConfig", () => {
 
   /**
    * The character cap alone is not sufficient. `.envelope-name` sizes the hero
-   * script as `160cqi / --name-length`, so the size depends on the character
+   * script as `135cqi / max(--name-length, 5)`, so the size depends on the character
    * COUNT while the rendered width depends on which characters they are — and
    * in a script face a capital is roughly twice as wide as a lowercase letter.
    * Measured with a `Range` over the live text node (scratchpad/name-cap.mjs):
@@ -434,6 +434,64 @@ describe("validateInvitationConfig", () => {
         path: "couple.brideFirstName",
         message:
           "renders too wide for the hero card — uppercase letters are about twice the width of lowercase in the script face, so use fewer characters or Title Case",
+      },
+    ]);
+  });
+
+  /**
+   * The unit budget above is a LINEAR model, and measurement proves no linear
+   * model can do this job. Re-measured with a `Range` over the live text node at
+   * 320 / 390 / 1440 after the card moved to the raster sheet
+   * (scratchpad/a-namefit2.mjs), as a percentage of the card's content box:
+   *
+   *   JOSE   4 capitals ->  78%  FITS
+   *   MMMM   4 capitals -> 136%  OVERFLOWS
+   *
+   * Same character count, same capital count, opposite outcome — so any single
+   * (weight, budget) pair either lets `MARIA` (145%) through or rejects
+   * `MaríaÁngeles` (79%, a perfectly ordinary Spanish name). Both were tried:
+   * weight 3 rejects `MaríaÁngeles`, weight 4 rejects `AnaMaríaLuz` (92%) and
+   * still admits `MMMM`. The linear model was left alone.
+   *
+   * What IS separable is the case the budget was actually written for: a real
+   * name typed in ALL CAPS. Measured, every all-caps name of five or more
+   * letters overflows (`MARIA` 145%, `CIELO` 111%, `CARMEN` 134%, `JOSEP` 101%,
+   * `MARIAJO` 134%) while `JOSE` at four fits — and no mixed-case name in the
+   * measured set is affected by the rule at all, so it adds zero false
+   * positives. `white-space: nowrap` keeps this overflow INSIDE the card, where
+   * `audit.mjs` cannot see it, which is why it has to be caught here.
+   */
+  it("rejects an all-caps first name of five or more letters, which the linear unit budget misses", () => {
+    const config = clone();
+
+    // 4 capitals: measured at 78% of the content box. Legal.
+    config.couple.brideFirstName = "JOSE";
+    expect(validateInvitationConfig(config)).toEqual([]);
+
+    // Mixed case with three capitals: measured at 92%. Must stay legal — this
+    // is the false positive a heavier uppercase weight would have introduced.
+    config.couple.brideFirstName = "AnaMaríaLuz";
+    expect(validateInvitationConfig(config)).toEqual([]);
+
+    // 5 capitals: measured at 145%. Only 10 units, so the budget lets it pass.
+    config.couple.brideFirstName = "MARIA";
+    expect(validateInvitationConfig(config)).toEqual([
+      {
+        path: "couple.brideFirstName",
+        message:
+          "renders too wide for the hero card — an all-caps name of five letters or more overflows the card in the script face, so use Title Case",
+      },
+    ]);
+
+    // Accented capitals count too: `toLowerCase()` detects case without
+    // assuming ASCII, so this must not slip through as "caseless".
+    config.couple.groomFirstName = "ÁNGEL";
+    config.couple.brideFirstName = "Cielo";
+    expect(validateInvitationConfig(config)).toEqual([
+      {
+        path: "couple.groomFirstName",
+        message:
+          "renders too wide for the hero card — an all-caps name of five letters or more overflows the card in the script face, so use Title Case",
       },
     ]);
   });

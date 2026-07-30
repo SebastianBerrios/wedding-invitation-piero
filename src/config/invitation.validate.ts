@@ -30,27 +30,72 @@ const ITINERARY_ICONS = new Set([
  * Width budget for a hero-card first name, in "narrow character" units.
  *
  * `.envelope-name` sizes the script from the raw character COUNT
- * (`160cqi / --name-length`) while the rendered width depends on WHICH
+ * (`135cqi / max(--name-length, 5)`) while the rendered width depends on WHICH
  * characters those are. Measured with a `Range` over the live rendered text
  * node at 320 / 390 / 1440 (scratchpad/name-cap.mjs), a capital in Pinyon
  * Script renders about twice as wide as a lowercase letter — the swash entry
  * strokes are what cost the space. So a capital counts as two units.
  *
- * Calibrated against real measurements rather than picked:
- *   FIT  Ana 4u, Cielo/Piero 6u, Guadalupe 10u, Inmaculada 11u,
- *        Maximiliano 12u, Buenaventura 13u  (all measured at 64-85% of the
- *        card's content box)
- *   OVER MARIAJOSEFAX 24u, MMMMMMMMMMMM 24u  (measured at 130% and 176%)
- * A budget of 14 separates them with margin at every breakpoint.
+ * Calibrated against real measurements rather than picked, and RE-MEASURED
+ * against the raster card, whose content box is 74% of the card's width where
+ * the drawn card's was 87% (scratchpad/a-namefit2.mjs, at 320 / 390 / 1440 —
+ * the figures are identical at all three):
+ *   FIT  Ana 4u (63%), Cielo 6u (64%), Piero 6u (69%), Guadalupe 10u (74%),
+ *        Inmaculada 11u (82%), Maximiliano 12u (77%), Buenaventura 13u (77%)
+ *   OVER MARIAJOSEFAX 24u (126%), MMMMMMMMMMMM 24u (170%),
+ *        Wwwwwwwwwwww 13u (107%)  <- 13u, so the budget MISSES this one
+ * A budget of 14 separates the realistic cases with margin at every breakpoint.
  *
- * This is deliberately a HEURISTIC for realistic names, not a renderer. It
- * does not catch adversarial input built from the single widest glyph in the
- * face (`MMMM`, `Wwwwwwwwwwww`), because doing that properly would mean
- * shipping per-glyph advance widths into a config validator. Those are not
- * names; the cases this protects against are a real ALL-CAPS name and the
- * ALL-CAPS placeholder sentinels this config shipped with.
+ * This is deliberately a HEURISTIC for realistic names, not a renderer, and the
+ * re-measurement proved it cannot be turned into one by tuning: `JOSE` (4
+ * capitals) renders at 78% and `MMMM` (4 capitals) at 136%, so no linear
+ * weight-and-budget pair can classify both. Doing it properly means shipping
+ * per-glyph advance widths into a config validator. `MAX_ALL_CAPS_LENGTH` below
+ * closes the one part of the gap that IS separable.
  */
 const MAX_SCRIPT_WIDTH_UNITS = 14;
+
+/**
+ * Longest all-caps first name that still fits the hero card.
+ *
+ * The unit budget above is LINEAR, and measurement shows no linear model can
+ * do this job: re-measured with a `Range` over the live text node at
+ * 320 / 390 / 1440 (scratchpad/a-namefit2.mjs), `JOSE` renders at 78% of the
+ * card's content box and `MMMM` at 136% — same length, same capital count,
+ * opposite outcome. Raising the uppercase weight to 3 rejects `MaríaÁngeles`
+ * (79%, an ordinary name); raising it to 4 rejects `AnaMaríaLuz` (92%) and
+ * still admits `MMMM`. Both were tried and rejected.
+ *
+ * The separable case is the one the budget was written for — a real name typed
+ * in ALL CAPS. Every measured all-caps name of five letters or more overflows
+ * (`MARIA` 145%, `CARMEN` 134%, `MARIAJO` 134%, `CIELO` 111%, `JOSEP` 101%)
+ * while `JOSE` at four fits, and no mixed-case name in the measured set is
+ * touched by the rule at all. So this catches those with zero false positives,
+ * and the remaining gap — 4-or-fewer-character strings built from the widest
+ * glyph in the face (`MMMM`, `WWWW`) — is left open on purpose. Those are not
+ * names, and closing them properly still needs per-glyph advance widths.
+ */
+const MAX_ALL_CAPS_LENGTH = 4;
+
+/**
+ * True when `name` contains at least one cased letter and no lowercase one —
+ * i.e. it was typed in caps. `toLocaleLowerCase` is not needed; plain
+ * `toLowerCase` already handles Á/É/Í/Ó/Ú/Ñ, and comparing against the original
+ * avoids assuming ASCII.
+ */
+function isAllCaps(name: string): boolean {
+  let hasCased = false;
+  for (const char of name) {
+    const lower = char.toLowerCase();
+    if (lower !== char) {
+      hasCased = true;
+    } else if (char.toUpperCase() !== char) {
+      // A cased character that is already lowercase.
+      return false;
+    }
+  }
+  return hasCased;
+}
 
 /** Width of `name` in narrow-character units: uppercase counts double. */
 function scriptWidthUnits(name: string): number {
@@ -110,11 +155,11 @@ export function validateInvitationConfig(
 
   // 1b. couple.{bride,groom}FirstName length cap.
   // `.envelope-name` in globals.css sizes the hero script as
-  // `160cqi / var(--name-length)` with `white-space: nowrap`, where
+  // `135cqi / max(var(--name-length), 5)` with `white-space: nowrap`, where
   // `--name-length` is the longer first name (set by `HeroSection` from this
-  // config). Because the coefficient is divided by the length, the names keep
-  // a constant ~70% of the card's content box at ANY length — so this cap is
-  // no longer tied to one hand-tuned coefficient the way it used to be.
+  // config). Because the coefficient is divided by the length, a Title-Case
+  // name lands at 62-92% of the card's content box at ANY length — so this cap
+  // is no longer tied to one hand-tuned coefficient the way it used to be.
   // What it still guards is the FLOOR: past roughly 12 characters the divided
   // size drops below the `clamp()` minimum (1.25rem) at a 320px viewport, and
   // from there a longer name overflows the card. `nowrap` means it would
@@ -135,6 +180,12 @@ export function validateInvitationConfig(
         path: `couple.${field}`,
         message:
           "renders too wide for the hero card — uppercase letters are about twice the width of lowercase in the script face, so use fewer characters or Title Case",
+      });
+    } else if (isAllCaps(name) && name.length > MAX_ALL_CAPS_LENGTH) {
+      errors.push({
+        path: `couple.${field}`,
+        message:
+          "renders too wide for the hero card — an all-caps name of five letters or more overflows the card in the script face, so use Title Case",
       });
     }
   }
