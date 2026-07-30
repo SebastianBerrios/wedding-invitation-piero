@@ -16,7 +16,14 @@ export function GrainOverlay({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={`pointer-events-none fixed inset-0 opacity-[0.055] mix-blend-multiply ${className ?? ""}`}
+      // 0.075, up from 0.055 (VISUAL RESTYLE pass, target item 1): the
+      // reference shows a VISIBLE cold-pressed tooth, and at 0.055 over the
+      // new floral washes the grain had stopped registering at all. Held down
+      // to 0.075 rather than pushed further because `mix-blend-mode: multiply`
+      // with a grayscale tile darkens all channels equally and therefore
+      // desaturates the warm florals underneath — the gray-cast failure mode
+      // this whole layer exists to avoid.
+      className={`pointer-events-none fixed inset-0 opacity-[0.075] mix-blend-multiply ${className ?? ""}`}
       style={{
         backgroundImage: GRAIN_TILE,
         backgroundSize: "220px 220px",

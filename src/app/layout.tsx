@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Cormorant_SC, Great_Vibes } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  Cormorant_SC,
+  Pinyon_Script,
+} from "next/font/google";
 import "./globals.css";
 import { StickyMusicToggle } from "@/components/interactive/StickyMusicToggle";
 import { WatercolorBackground } from "@/components/decor/WatercolorBackground";
@@ -34,11 +38,24 @@ const cormorantSc = Cormorant_SC({
   fallback: ["Georgia", "serif"],
 });
 
-const greatVibes = Great_Vibes({
-  subsets: ["latin"],
+// Script face for the couple's names (VISUAL RESTYLE pass, target item 3).
+// Great Vibes was replaced by Pinyon Script: Great Vibes is a slanted, loopy,
+// near-monoline hand; the target is an UPRIGHT, high-contrast formal
+// calligraphic script with ornate swash capitals. Rejected alternatives,
+// screenshotted side by side at 44px and 64px before deciding:
+//   - Petit Formal Script — large x-height, low stroke contrast, plain
+//     capitals; reads modern-friendly, not engraver's formal.
+//   - Italianno — even MORE slanted than Great Vibes and lighter still; its
+//     hairlines nearly vanish on cream at mobile sizes.
+// Pinyon Script keeps a thick/thin copperplate contrast, sits closer to
+// upright, and its C/P capitals carry the decorative swash entry strokes the
+// reference has. Also SIL OFL 1.1 and available through next/font/google, so
+// it stays self-hosted with zero third-party requests (see ASSETS.md).
+const pinyonScript = Pinyon_Script({
+  subsets: ["latin", "latin-ext"],
   weight: "400",
   display: "swap",
-  variable: "--font-great-vibes",
+  variable: "--font-pinyon",
   fallback: ["cursive"],
 });
 
@@ -55,7 +72,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${cormorant.variable} ${cormorantSc.variable} ${greatVibes.variable}`}
+      className={`${cormorant.variable} ${cormorantSc.variable} ${pinyonScript.variable}`}
       // The `reveal-ready` inline script below deliberately mutates this
       // element's className before/during hydration (the same no-flash
       // pattern documented dark-mode class scripts use, e.g. next-themes) —

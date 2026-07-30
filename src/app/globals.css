@@ -20,7 +20,7 @@
 
   --font-serif: var(--font-cormorant), Georgia, "Times New Roman", serif;
   --font-caps: var(--font-cormorant-sc), var(--font-cormorant), Georgia, serif;
-  --font-script: var(--font-great-vibes), "Apple Chancery", cursive;
+  --font-script: var(--font-pinyon), "Apple Chancery", cursive;
 
   --text-eyebrow: 0.8125rem;
   /*
@@ -37,33 +37,157 @@
 
   --tracking-eyebrow: 0.28em;
   --tracking-caps: 0.12em;
+  /*
+   * Wider than the page's section eyebrows, for the ONE line that needs it:
+   * `NUESTRA BODA` on the hero card (VISUAL RESTYLE pass, target item 3). The
+   * reference tracks this line noticeably wider than its other small caps.
+   * Deliberately a separate token instead of widening `--tracking-eyebrow`
+   * globally — that would push every section eyebrow toward the 320px gutter
+   * for one card's sake.
+   */
+  --tracking-card-eyebrow: 0.38em;
 
   --spacing-section: clamp(4rem, 12vw, 8rem); /* vertical rhythm between sections */
   --spacing-gutter: clamp(1.25rem, 6vw, 3rem); /* horizontal page gutter */
   --radius-card: 2px; /* printed-paper, not app-chrome */
 
-  --animate-flap-open: flap-open 900ms cubic-bezier(0.4, 0, 0.2, 1) 400ms forwards;
-  --animate-card-rise: card-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) 1150ms forwards;
+  /*
+   * `both`, not `forwards`. `forwards` only holds the END state after the
+   * animation finishes; during the `animation-delay` the element renders at its
+   * LAYOUT position, ignoring the keyframe's `from`. That was harmless while
+   * `card-rise` started at `translateY(0)`, but the restyled card starts sunk
+   * into the envelope (`--card-sink`), so with `forwards` the card sat fully
+   * visible for the first 1150ms and then jumped down before rising — the
+   * closed envelope never read as closed. `both` applies `from` during the
+   * delay as well.
+   */
+  /*
+   * Essentially design §9's chain, nudged only to account for the card's much
+   * longer travel now that it starts fully sunk in the envelope (~70% of its
+   * own height, up from 28%): the flap finishes at 1200ms and the card rises
+   * 950-2100ms, so the sequence still reads flap-then-card.
+   *
+   * A tighter chain (settled at 1700ms) was tried and REVERTED. The theory was
+   * that `.envelope-name` is the page's Largest Contentful Paint element and is
+   * hidden until the rise uncovers it, so the reveal would gate LCP. Measured:
+   * Lighthouse mobile "render delay" moved from 2674ms to 2670ms — no effect.
+   * LCP here is set by the simulated font/layout path, not by the animation, so
+   * there was no reason to make the reveal feel more hurried.
+   */
+  --animate-flap-open: flap-open 850ms cubic-bezier(0.4, 0, 0.2, 1) 350ms both;
+  --animate-card-rise: card-rise 1150ms cubic-bezier(0.16, 1, 0.3, 1) 950ms both;
 }
 
 /*
- * Base structural rules for the three animated envelope wrapper elements
- * (design §9, work unit 8a). The `--animate-*` tokens above only supply
- * the keyframe/timing; `perspective` on the container and
- * `transform-style: preserve-3d` on the flap are what make `rotateX` read
- * as a genuine 3D hinge instead of a flat skew.
+ * Envelope + card geometry (design §9; VISUAL RESTYLE pass, target item 2).
+ * Every tunable lives here as a custom property so the composition can be
+ * retuned in one place — the TSX only consumes them.
+ *
+ *   --card-aspect : PORTRAIT by construction. The old card was landscape,
+ *                   which is the main thing that made the hero read as a
+ *                   name plaque instead of an invitation card.
+ *   --card-base   : where the card rests, measured up from the envelope's
+ *                   bottom edge (its CLOSED position, deep in the pocket)
+ *   --card-rise   : how far `card-rise` lifts it, as a share of card height.
+ *                   Tuned so roughly the lower THIRD of the card stays behind
+ *                   the front face when settled, as in the reference.
+ *   --card-hidden : that hidden share, re-expressed against the card's WIDTH
+ *                   so it can be used as `padding-bottom` (see below).
+ *
+ * The card's horizontal inset (`inset-x-[11%]` in Envelope.tsx, i.e. a card
+ * 78% of the envelope's width) is the one number NOT a custom property here,
+ * because Tailwind needs it at build time; every derivation below assumes it.
+ *
+ * `perspective` on the container plus `transform-style: preserve-3d` on the
+ * flap are what make the flap's `rotateX` read as a genuine 3D hinge rather
+ * than a flat vertical squash.
  */
+.envelope-frame {
+  /*
+   * Container context for `cqi` below. The `max-width` cap lives on THIS
+   * element, so `1cqi` == 1% of the envelope's rendered width at every
+   * viewport, capped or not.
+   */
+  container-type: inline-size;
+}
+
 .envelope {
+  --card-aspect: 5 / 6.4;
+  /*
+   * In `cqi`, NOT `%`. A percentage `bottom` resolves against the containing
+   * block's HEIGHT, and the card's containing block is now the pocket-clip
+   * wrapper, which is deliberately four times the envelope's height — so `7%`
+   * silently became 28% of the envelope and lifted the card 45px too high,
+   * which in turn left the "closed" state peeking above the envelope's edge.
+   * `1cqi` is 1% of the envelope's WIDTH (see `.envelope-frame`), so
+   * 4.4cqi == 7% of the envelope's height (Eh = 0.625*Ew) and is immune to the
+   * wrapper's size.
+   */
+  --card-base: 4.4cqi;
+  /* Start of `card-rise`: fully sunk into the pocket. See the keyframe. */
+  --card-sink: 42%;
+  --card-rise: -28%;
+  /*
+   * The share of the card's height that stays hidden behind the front face
+   * once it has risen, expressed as a percentage of the card's WIDTH — CSS
+   * percentage padding always resolves against the inline size, never the
+   * block size, and the content wrapper uses it as `padding-bottom`.
+   *
+   * Derivation, with Ew = envelope width, Eh = 0.625*Ew (aspect 8/5),
+   * Cw = 0.78*Ew and Ch = Cw * 6.4/5 = 0.9984*Ew:
+   *   hidden = Eh - (card-base*Eh + |card-rise|*Ch)
+   *          = 0.625 - (0.07*0.625 + 0.28*0.9984) = 0.3018 * Ew
+   *          = 30% of Ch  -> the reference's "lower third overlapped"
+   *   as a share of Cw    = 0.3018 / 0.78 = 39%
+   *
+   * Without this the card's content centres in its FULL box, half of which is
+   * behind the envelope — which is exactly how the first attempt buried the
+   * groom's name behind the envelope's top edge.
+   */
+  --card-hidden: 39%;
+
   perspective: 1200px;
+
+  /*
+   * Reserve the card's overhang IN LAYOUT.
+   *
+   * The card's settled position is a `transform`, which is invisible to
+   * layout, so `min-h-svh` on the hero cannot grow to absorb it and the card
+   * gets decapitated at the top of short viewports. The previous fix was a
+   * `@media (max-height: 800px)` padding rule on `#hero` with a hand-measured
+   * magic number — it had to be re-derived every time the type scale moved,
+   * and it silently stopped covering the taller PORTRAIT card.
+   *
+   * This is the same quantity derived instead of guessed. With
+   * Ew = envelope width, Eh = 0.625*Ew (aspect 8/5) and
+   * Ch = 0.78*Ew * 6.4/5 = 0.9984*Ew:
+   *
+   *   overhang = card-base*Eh + Ch - Eh + |card-rise|*Ch
+   *            = 0.07*0.625 + 0.9984 - 0.625 + 0.28*0.9984  (x Ew)
+   *            = 0.697 * Ew
+   *
+   * `1cqi` is 1% of Ew (see `.envelope-frame`), so 70cqi is exactly that
+   * overhang and it tracks the envelope at every width with no media query
+   * and no magic pixels. Plus 2cqi of breathing room.
+   */
+  margin-top: 72cqi;
 }
 
 .envelope-flap {
   transform-style: preserve-3d;
+  /*
+   * Load-bearing. As the flap passes 90deg its back face turns toward the
+   * viewer and is hidden, so the opened flap vanishes instead of covering the
+   * risen card — which it would otherwise do, since it lives at z-30 and the
+   * card at z-10.
+   */
   backface-visibility: hidden;
   will-change: transform;
 }
 
 .envelope-card {
+  bottom: var(--card-base);
+  aspect-ratio: var(--card-aspect);
   will-change: transform;
   /*
    * Corrective fix (Defect 3): establishes an inline-size containment
@@ -79,9 +203,9 @@
 }
 
 /*
- * The seal is a static, always-visible medallion (Defect 6) — no longer an
- * animated "breaks and falls away" effect. It sits at the apex in every
- * state: closed, open, and under reduced motion.
+ * The rose closure and the monogram are static — no longer an animated
+ * "breaks and falls away" seal. Both stay visible in every state: closed,
+ * open, and under reduced motion, as in the reference.
  */
 
 @keyframes flap-open {
@@ -96,10 +220,20 @@
 
 @keyframes card-rise {
   from {
-    transform: translateY(0) scale(0.985);
+    /*
+     * Positive: the card starts pushed DOWN into the pocket, far enough that
+     * its top edge sits at or below the envelope's top edge and it is
+     * completely hidden by the front face and the closed flap. The excess
+     * below the envelope is clipped by the pocket wrapper in Envelope.tsx.
+     *
+     *   card top above envelope top, at rest
+     *     = card-base*Eh + Ch - Eh = 0.07*0.625 + 0.9984 - 0.625 = 0.417 Ew
+     *     = 0.417 / 0.9984 = 42% of the card's own height
+     */
+    transform: translateY(var(--card-sink)) scale(0.985);
   }
   to {
-    transform: translateY(-46%) scale(1);
+    transform: translateY(var(--card-rise)) scale(1);
   }
 }
 
@@ -110,7 +244,7 @@
   }
   .envelope-card {
     animation: none;
-    transform: translateY(-46%);
+    transform: translateY(var(--card-rise));
   }
 }
 
@@ -128,37 +262,42 @@
  */
 .envelope-name {
   /*
-   * Sized against the REAL configured names, not a worst case. The previous
-   * `7.15cqi` was derived when the names were still the 14-character
-   * sentinels `NOMBRE_NOVIA`/`NOMBRE_NOVIO`; once the real 5-character names
-   * landed it rendered them at 14.4px/18.2px/27.2px (320/390/1440) — the
-   * page's centerpiece reading like a footnote, with most of the card empty.
+   * LENGTH-ADAPTIVE, not a hand-tuned constant (VISUAL RESTYLE pass, target
+   * item 3). Every previous version hard-coded one coefficient — `7.15cqi`
+   * derived for the 12-character sentinels, then `16cqi` re-derived for the
+   * real 5-character names — and each time the coefficient and
+   * `MAX_FIRST_NAME_LENGTH` in `invitation.validate.ts` had to be kept in
+   * lockstep by hand, with `white-space: nowrap` hiding any mistake INSIDE
+   * the card where `audit.mjs` (horizontal-overflow only) cannot see it.
    *
-   * Measured with a `Range` over the text node — NOT
-   * `getBoundingClientRect` on the element, which returns the full-width
-   * block box and silently reports every name as "99% of the card". The
-   * widest name, `Piero`, is 201 units wide per 100px of font against an
-   * inner card width of 203/256/381px at 320/390/1440.
+   * `--name-length` is the longer of the two configured first names, set as
+   * an inline custom property by `HeroSection` from `invitationConfig`. So
+   * the type scale falls out of the data instead of chasing it:
    *
-   * `16cqi` (capped at 4rem) puts each name at ~32-36% of the inner width.
-   * The first attempt at `18cqi`/4.5rem was reverted: the taller card made
-   * the composition overflow the TOP of short viewports — clipped by 63px at
-   * 320x640, 36px at 1440x900 and 124px at 1280x720. The card's resting
-   * position is a `transform` (`card-rise`), which does not participate in
-   * layout, so `min-h-svh` on the section cannot grow to absorb it; the rise
-   * was reduced from -64% to -46% in the same pass. Verified with
-   * `scratchpad/vfit.mjs` across 320x640 / 390x844 / 1280x720 / 1440x900 /
-   * 1920x1080. `audit.mjs` only measures HORIZONTAL overflow, so vertical
-   * clipping needs that separate check — do not assume a green audit means
-   * the hero fits.
+   *   font-size = 135cqi / name-length
    *
-   * `white-space: nowrap` means a LONGER name would overflow the card rather
-   * than wrap, and an overflow inside the card would not necessarily cross
-   * the viewport edge, so `audit.mjs` could miss it. That is guarded at the
-   * data layer instead: `invitation.validate.ts` caps first-name length at
-   * the 12 characters this coefficient can fit. Change one, change the other.
+   * The 135 comes from measurement, not taste. `cqi` resolves against
+   * `.envelope-card`'s own inline size (see `container-type` above). Measured
+   * with a `Range` over the text node — NOT `getBoundingClientRect` on the
+   * element, which returns the full-width block box and reports every name as
+   * ~99% of the card; a previous pass was misled by exactly that. In Pinyon
+   * Script a name renders about 0.38 x font-size per character, and the card's
+   * content box is 87% of the card's width, so
+   *   0.38 * (135/len) * len = 51% of the card width = ~59% of the content box,
+   * independent of length.
+   *
+   * 160 was tried first and rejected by looking at the render: at ~70% of the
+   * content box the two names plus the eyebrow filled the card's VISIBLE
+   * height (only 70% of the card — the rest is behind the envelope) and the
+   * script collided with the inset hairline frame. The card's visible height is
+   * about 1.12x its width, and two lines of script alone cost 2 x 0.38 x
+   * font-size, so name size and vertical air trade against each other directly.
+   * 135 is where the names still dominate the card and the frame still breathes.
+   *
+   * The clamp bounds are only backstops for absurd container sizes; at every
+   * real breakpoint (320 / 390 / 1440) the `calc()` term is what applies.
    */
-  font-size: clamp(1.75rem, 16cqi, 4rem);
+  font-size: clamp(1.25rem, calc(135cqi / var(--name-length, 8)), 7rem);
   line-height: 1;
   white-space: nowrap;
   overflow-wrap: normal;
@@ -172,63 +311,59 @@
  * instead of drifting at one breakpoint.
  */
 .envelope-ampersand {
-  font-size: clamp(0.75rem, 6cqi, 1.5rem);
+  font-size: clamp(0.9rem, 8cqi, 2rem);
   line-height: 1;
 }
 
 /*
- * Short-viewport rescue for the hero. The card's resting position is a
- * `transform`, which is invisible to layout, so the card overhangs the top of
- * `min-h-svh` and `justify-center` cannot compensate. Measured clipping before
- * this rule (scratchpad/vfit.mjs): -42px at 1280x720 and -9px at 320x640,
- * while 390x844, 1440x900 and 1920x1080 were already fine. Extra top padding
- * pushes the centered block down; the section may then exceed one viewport,
- * which is the correct trade — a scroll beats a decapitated card.
+ * The `@media (max-height: 800px) { #hero { padding-top: ... } }` rescue that
+ * used to live here was REMOVED. It compensated for the card's `transform`
+ * overhang with a hand-measured pixel constant, which had to be re-derived on
+ * every type-scale change and did not cover the taller portrait card. The
+ * overhang is now reserved in layout by `.envelope`'s `margin-top: 56cqi`
+ * (derived above), so the hero needs no viewport-height special case at all.
  */
-@media (max-height: 800px) {
-  #hero {
-    padding-top: calc(var(--spacing-section) + 5rem);
-  }
-}
 
 /*
- * Backdrop wash recipe (design §9, work unit 8b; retuned by the corrective
- * pass, Defect 4). Four low-intensity, warm-toned corner washes plus a base
- * vertical gradient — no gray cast, no olive-heavy mixing at high
- * percentages (the previous recipe's 20-26% mixes, combined with the now-
- * removed blurred SVG ellipses, is what read as "smudges"). Percentages
- * kept low (6-14%) and radii kept fairly tight so the effect stays a barely
- * -there paper warmth, not a visible shape.
+ * Paper ground for the watercolor floral (design §9, work unit 8b; VISUAL
+ * RESTYLE pass, target item 1). This is now only the PAPER — a warm ivory
+ * vertical gradient. The florals themselves are the inline SVG in
+ * `WatercolorBackground`, so the old four corner washes were removed: they
+ * would fight the blooms for the same low-contrast register and were the
+ * remnant of the pass that had no florals at all.
  */
 .watercolor {
   background-color: var(--color-surface);
-  background-image:
-    radial-gradient(
-      65% 55% at 6% 4%,
-      color-mix(in oklab, var(--color-rule) 12%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      60% 50% at 98% 8%,
-      color-mix(in oklab, var(--color-surface-warm) 55%, transparent),
-      transparent 65%
-    ),
-    radial-gradient(
-      55% 50% at 94% 96%,
-      color-mix(in oklab, var(--color-rule) 10%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      50% 45% at 4% 98%,
-      color-mix(in oklab, var(--color-body) 6%, transparent),
-      transparent 68%
-    ),
-    linear-gradient(
-      180deg,
-      #fffdf7 0%,
-      var(--color-surface) 45%,
-      var(--color-surface-warm) 100%
-    );
+  background-image: linear-gradient(
+    176deg,
+    #fffdf7 0%,
+    var(--color-surface) 42%,
+    var(--color-surface-warm) 100%
+  );
+}
+
+/*
+ * Cold-pressed paper mottle. A COARSE `feTurbulence` field (features ~40-60px
+ * at `baseFrequency 0.018`) rendered ONCE into a 320x320 tile and repeated —
+ * the same bounded technique as `GrainOverlay`, never a live full-viewport
+ * filter. `GrainOverlay` supplies the fine tooth on top of the content; this
+ * supplies the large-scale unevenness of handmade paper underneath it, which
+ * is what stops the floral washes reading as flat vector gradients.
+ *
+ * `stitchTiles="stitch"` is required — without it the noise field restarts at
+ * every tile boundary and the repeat becomes a visible grid.
+ */
+.watercolor-mottle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.018' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23m)'/%3E%3C/svg%3E");
+  background-size: 320px 320px;
+  /*
+   * Kept low on purpose. `mix-blend-mode: multiply` with a GRAYSCALE tile
+   * darkens all three channels equally, which lowers the perceived chroma of
+   * whatever is underneath — push this up and the warm florals start to read
+   * gray, which is the one failure mode this whole layer exists to avoid.
+   */
+  opacity: 0.06;
+  mix-blend-mode: multiply;
 }
 
 /*

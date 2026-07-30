@@ -1,8 +1,6 @@
 import { invitationConfig } from "@/config/invitation";
 import { Envelope } from "@/components/decor/Envelope";
-import { Monogram } from "@/components/decor/Monogram";
-import { Rule } from "@/components/decor/Rule";
-import { Sprig } from "@/components/decor/Sprig";
+import { WatercolorFloral } from "@/components/decor/WatercolorBackground";
 import { HeroSongButton } from "@/components/interactive/HeroSongButton";
 
 /**
@@ -23,55 +21,88 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative flex min-h-svh flex-col items-center justify-center gap-8 px-gutter py-section text-center lg:gap-10"
+      /*
+        `py-10 lg:py-14` instead of the page-wide `py-section` (up to 8rem):
+        `.envelope`'s `margin-top: 72cqi` already reserves the card's overhang,
+        so a further 128px of section padding was pure duplication — it pushed
+        the hero to 999px tall at 1440x900, putting the song button and the
+        scroll hint below the fold on the most common desktop size. Measured
+        with scratchpad/vfit.mjs: 821px at 1440x900 after this change, and
+        `clippedAtTop: false` still holds at 320x640 / 390x844 / 1280x720 /
+        1440x900 / 1920x1080.
+      */
+      className="relative flex min-h-svh flex-col items-center justify-center gap-8 px-gutter py-10 text-center lg:gap-10 lg:py-14"
     >
       {/*
-        Corner botanical ornaments (design §9/work unit 8b), purely
-        decorative. Opacity raised from the previous 40 to 55 (corrective
-        pass, Defect 5) — the redrawn `Sprig` now has confident filled
-        leaves rather than a thin scratchy stroke, so it can carry a bit
-        more presence without competing with the envelope. Base size
-        shrunk from h-24/w-14 to h-14/w-8 (measured via
-        `getBoundingClientRect`): the wider landscape envelope's card now
-        extends closer to the section edges at 320-390px, and the larger
-        size visually collided with the card's corners at those widths.
+        Hero-strength instance of the SAME watercolor floral that the page-wide
+        fixed backdrop paints (VISUAL RESTYLE pass, target item 1). Two
+        instances of one artwork, not two artworks: the hero reads prominent,
+        the sections below read subtler, and because the geometry is identical
+        it still reads as one sheet of paper.
+
+        The two tiny corner `Sprig` ornaments that used to sit here were
+        REMOVED, not kept alongside: once real large-scale florals exist they
+        are redundant, and having both is exactly the "two competing botanical
+        registers" the restyle brief called out. `Sprig` is still used as a
+        section divider elsewhere on the page.
+
+        `-z-10` (not `z-0`) is load-bearing. `#hero` is `position: relative`
+        with `z-index: auto`, so it is NOT a stacking context and this child
+        participates in the root one — a negative z-index paints it above the
+        root background but BELOW all in-flow content. With `z-0` it would
+        paint above the non-positioned `<button>` and scroll hint, since
+        positioned elements outrank in-flow siblings.
       */}
-      <Sprig
-        variant="eucalyptus"
-        className="pointer-events-none absolute left-0 top-6 h-[3.5rem] w-[2rem] opacity-55 lg:h-32 lg:w-20"
-      />
-      <Sprig
-        variant="olive"
-        className="pointer-events-none absolute right-0 top-6 h-[3.5rem] w-[2rem] -scale-x-100 opacity-55 lg:h-32 lg:w-20"
+      <WatercolorFloral
+        intensity="hero"
+        className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
       />
 
-      <Envelope>
+      <Envelope monogram={couple.monogram}>
         {/*
           Decorative eyebrow, intentionally kept at the small `text-eyebrow`
           (13px) size (Defect 3 decision): it is not interactive, and
           small-caps eyebrows are a deliberate design accent throughout the
-          page.
+          page. Tracking is widened past the page default (`tracking-card-
+          eyebrow`) because on the reference's card this line is noticeably
+          wider than its section eyebrows.
         */}
-        <h2 className="font-caps text-eyebrow uppercase tracking-eyebrow text-ink">
+        <h2 className="font-caps text-eyebrow uppercase tracking-card-eyebrow text-ink">
           {hero.eyebrow}
         </h2>
 
         {/*
-          Fix (Defect 3, corrective pass): each name is its own full-width
-          block (bride / & / groom stacked, matching the reference), sized
-          via `.envelope-name` (globals.css) — a `clamp()` in container
-          query units tied to the CARD's own width, not the viewport, with
-          `hyphens: none` and `white-space: nowrap` so a name renders on ONE
-          line instead of hyphen-breaking mid-word (the previous
-          `break-words` utility is exactly what caused "NOMBRE_NOV / IA").
-          The type scale was later retuned for the real 5-character names;
-          `invitation.validate.ts` caps first names at the 12 characters this
-          scale can hold. Explicit `{" "}` space text nodes
-          between the blocks keep the raw DOM text content (and therefore
-          the accessible-name computation) reading "Bride & Groom" rather
-          than concatenating the three blocks with no separator.
+          Each name is its own full-width block (bride / & / groom stacked,
+          matching the reference), sized via `.envelope-name` (globals.css) —
+          a `clamp()` in container query units tied to the CARD's own width,
+          not the viewport, with `hyphens: none` and `white-space: nowrap` so a
+          name renders on ONE line instead of hyphen-breaking mid-word (the
+          `break-words` utility this replaced is exactly what caused
+          "NOMBRE_NOV / IA").
+
+          `--name-length` is the ONE number the type scale needs from the data:
+          `.envelope-name` divides its `cqi` coefficient by it, so the names
+          keep the same proportion of the card whether they are 5 characters or
+          12. That replaced a hand-tuned coefficient that had to be re-derived
+          — and kept in sync with `MAX_FIRST_NAME_LENGTH` by hand — every time
+          the names or the card geometry changed.
+
+          Explicit `{" "}` space text nodes between the blocks keep the raw DOM
+          text content (and therefore the accessible-name computation) reading
+          "Bride & Groom" rather than concatenating the three blocks with no
+          separator.
         */}
-        <h1 className="flex w-full flex-col gap-1 font-script text-ink">
+        <h1
+          className="flex w-full flex-col gap-1 font-script text-ink"
+          style={
+            {
+              "--name-length": Math.max(
+                couple.brideFirstName.trim().length,
+                couple.groomFirstName.trim().length,
+              ),
+            } as React.CSSProperties
+          }
+        >
           <span className="envelope-name block w-full">
             {couple.brideFirstName}
           </span>{" "}
@@ -86,14 +117,36 @@ export function HeroSection() {
           </span>
         </h1>
 
-        <Rule className="h-2.5 w-16 opacity-70" />
-
-        <Monogram initials={couple.monogram} className="h-10 w-10 lg:h-12 lg:w-12" />
+        {/*
+          The gold `Rule` and the `Monogram` medallion that used to close out
+          the card were REMOVED (target items 2 and 4). The reference's card
+          carries no medallion and no divider — the inset hairline frame is the
+          card's only ornament, and the monogram now belongs to the envelope's
+          front face, printed once rather than competing with the names.
+        */}
       </Envelope>
 
+      {/*
+        Music affordance (target item 5). `HeroSongButton` now owns BOTH the
+        prompt line and the round button, because the prompt doubles as the
+        error message when playback fails and only the client island knows the
+        player status.
+      */}
       <HeroSongButton />
 
-      <p className="font-serif text-sm text-body lg:text-base">
+      {/*
+        Scroll hint (target item 6). The reference has none, but this is a
+        full-viewport hero and `hero.scrollHint` is what tells a guest there
+        are six more sections below the fold — a real usability aid, kept
+        deliberately quiet rather than dropped for fidelity's sake.
+      */}
+      {/*
+        `text-ink`, not `text-body`, for the same measured reason as the song
+        prompt: over the hero's full-strength floral, `--color-body` measured
+        4.46:1 at 390px — below AA — while `--color-ink` measures 11:1. See
+        scratchpad/bg-contrast.mjs.
+      */}
+      <p className="font-serif text-sm text-ink lg:text-base">
         {hero.scrollHint}
       </p>
     </section>
