@@ -6,7 +6,6 @@ import { EventDetailsSection } from "@/components/sections/EventDetailsSection";
 import { DressCodeGiftsSection } from "@/components/sections/DressCodeGiftsSection";
 import { RsvpSection } from "@/components/sections/RsvpSection";
 import { RevealOnScroll } from "@/components/ui/RevealOnScroll";
-import { Sprig } from "@/components/decor/Sprig";
 
 // No cookies(), headers(), searchParams, connection(), or uncached fetch is
 // touched anywhere in this tree, and no `revalidate` is declared — this
@@ -15,18 +14,20 @@ import { Sprig } from "@/components/decor/Sprig";
 // leaked in and the build should be treated as broken.
 export const dynamic = "force-static";
 
-/**
- * A single centered botanical divider between sections (design §9/§10,
- * work unit 8b) — purely decorative, not a `<section>`, so it does not
- * count toward spec `invitation-sections`' fixed seven-section order.
+/*
+ * `SectionDivider` (a rotated botanical `Sprig`) used to sit between sections
+ * here. It was DELETED with `Sprig.tsx` and `Rule.tsx` in the real-assets batch B
+ * pass: the reference's divider is a hairline with a centre diamond, the couple
+ * supplied that exact ornament as `separator.png`, and it does not appear between
+ * every section — it brackets the family block, opens the dress code and closes
+ * the gifts. So the sections place `Separator` themselves (see `Separator.tsx`)
+ * and there is nothing generic left to put between them.
+ *
+ * Removing it also means the sections are now DIRECTLY adjacent, which matters:
+ * each one paints its own opaque cream or olive ground, and a transparent
+ * divider between two of them would have shown a stripe of the floral backdrop
+ * between two flat panels.
  */
-function SectionDivider() {
-  return (
-    <div aria-hidden="true" className="flex justify-center py-2">
-      <Sprig variant="rosebud" className="h-8 w-5 rotate-180 opacity-50" />
-    </div>
-  );
-}
 
 /**
  * Composes the seven invitation sections in the fixed order required by
@@ -57,26 +58,46 @@ export default function Home() {
   return (
     <main>
       <HeroSection />
-      <RevealOnScroll>
-        <LetterSection />
-      </RevealOnScroll>
-      <RevealOnScroll>
-        <DateSection />
-      </RevealOnScroll>
-      <SectionDivider />
-      <RevealOnScroll>
-        <FamilySection />
-      </RevealOnScroll>
-      <RevealOnScroll>
-        <EventDetailsSection />
-      </RevealOnScroll>
-      <SectionDivider />
-      <RevealOnScroll>
-        <DressCodeGiftsSection />
-      </RevealOnScroll>
-      <RevealOnScroll>
-        <RsvpSection />
-      </RevealOnScroll>
+      {/*
+        One opaque cream ground for everything below the hero.
+        This is NOT redundant with each section's own `bg-surface` /
+        `bg-surface-dark`, and it fixes a real defect that batch B introduced.
+
+        `RevealOnScroll` reveals by animating `opacity` from 0 on a wrapper AROUND
+        the section, so until a section is revealed its whole box is transparent.
+        That was harmless while the sections had no ground of their own, and became
+        a regression the moment they got one: measured on the real page, the
+        un-revealed Letter section showed the floral backdrop straight through
+        itself and its olive body copy faded in ON TOP of the painting at ~1.3:1 —
+        exactly the contrast failure the section backgrounds exist to prevent, just
+        confined to the 700ms transition.
+
+        Fixing it here rather than by threading each section's colour into
+        `RevealOnScroll` keeps the colour declared in exactly one place (the
+        section) and needs no new API: the transition now cross-fades from cream to
+        the section's own ground, and the painting is confined to the hero, which
+        is where the reference puts it too.
+      */}
+      <div className="bg-surface">
+        <RevealOnScroll>
+          <LetterSection />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <DateSection />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <FamilySection />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <EventDetailsSection />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <DressCodeGiftsSection />
+        </RevealOnScroll>
+        <RevealOnScroll>
+          <RsvpSection />
+        </RevealOnScroll>
+      </div>
     </main>
   );
 }

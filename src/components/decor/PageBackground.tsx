@@ -59,54 +59,51 @@
  *
  * The painting's mean luminance is 0.497 and its darkest pixels reach 0.086.
  * Against `--color-body` (olive #575531, luminance 0.094) that is 3.98:1 at the
- * MEAN and 1.01:1 at the darkest petal — the page's body copy sits directly on
- * this backdrop and would fail WCAG AA almost everywhere. `--page-veil` is the
- * cream layer that buys it back; the value was chosen by measuring composited
- * pixels, see globals.css.
+ * MEAN and 1.01:1 at the darkest petal, so no olive body copy can sit on it.
+ * `--page-veil` is the small cream layer that keeps the HERO's own two olive-free
+ * text nodes comfortable; the value was chosen by measuring composited pixels,
+ * see globals.css.
+ *
+ * ## One layer, not two
+ *
+ * Batch A added a second, document-height scrim below the hero because the six
+ * content sections had no surface of their own and their olive copy composited
+ * straight onto the painting. Batch B gave every section its own opaque ground
+ * (cream or `--color-surface-dark`, alternating, as the reference does), so that
+ * scrim had nothing left to protect and was removed along with the
+ * `body { position: relative }` it needed. The painting is now at full strength
+ * in the hero and covered everywhere below it — which is the reference's own
+ * structure, and the reason it no longer reads as a ghost.
  *
  * Purely decorative: `aria-hidden`, empty `alt`, `pointer-events-none`.
  */
 export function PageBackground() {
   return (
-    <>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-surface"
-      >
-        <img
-          src="/images/opt/background-901w.webp"
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-surface"
+    >
+      <img
+        src="/images/opt/background-901w.webp"
           srcSet="/images/opt/background-480w.webp 480w, /images/opt/background-640w.webp 640w, /images/opt/background-768w.webp 768w, /images/opt/background-901w.webp 901w"
-          sizes="100vw"
-          width={901}
-          height={1600}
-          alt=""
-          /*
-           * NOT `fetchPriority="high"`, which is where this started. Measured:
-           * with the backdrop promoted, Lighthouse mobile scored 90 with an LCP
-           * of 3.6s, because a 100 KiB decorative image was jumping the queue
-           * ahead of six font files and the two JS chunks — and it is not even
-           * the LCP element (`envelope-front.webp` is). It is in the initial
-           * HTML, so the preload scanner finds it regardless and the browser
-           * raises it to High on its own once layout proves it is in-viewport;
-           * the only thing the attribute changed was who it starved.
-           */
-          className="h-full w-full object-cover object-top"
-        />
-        {/* Zone 1's veil — see `--page-veil` in globals.css. */}
-        <div className="page-veil absolute inset-0 bg-surface" />
-      </div>
-      {/*
-        Zone 2's veil: everything below the hero, where the content sections'
-        olive body copy sits straight on the painting with no surface of its own.
-        Absolute (against `<body>`) rather than fixed, so it covers the DOCUMENT
-        below the hero instead of the lower part of every screen. Both layers are
-        `-z-10`, so DOM order decides which paints on top — this one comes
-        second, which is what makes the two veils stack.
-      */}
-      <div
-        aria-hidden="true"
-        className="page-veil-lower pointer-events-none absolute inset-x-0 bottom-0 -z-10 bg-surface"
+        sizes="100vw"
+        width={901}
+        height={1600}
+        alt=""
+        /*
+         * NOT `fetchPriority="high"`, which is where this started. Measured:
+         * with the backdrop promoted, Lighthouse mobile scored 90 with an LCP
+         * of 3.6s, because a 100 KiB decorative image was jumping the queue
+         * ahead of six font files and the two JS chunks — and it is not even
+         * the LCP element (`envelope-front.webp` is). It is in the initial
+         * HTML, so the preload scanner finds it regardless and the browser
+         * raises it to High on its own once layout proves it is in-viewport;
+         * the only thing the attribute changed was who it starved.
+         */
+        className="h-full w-full object-cover object-top"
       />
-    </>
+      {/* The single cream veil — see `--page-veil` in globals.css. */}
+      <div className="page-veil absolute inset-0 bg-surface" />
+    </div>
   );
 }

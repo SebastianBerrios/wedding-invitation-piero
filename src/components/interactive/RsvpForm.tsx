@@ -116,7 +116,7 @@ export function RsvpForm() {
         rel="noopener noreferrer"
         aria-disabled={href ? undefined : "true"}
         onClick={handleSubmitClick}
-        className="mt-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-body px-6 py-2.5 font-caps uppercase tracking-eyebrow text-body"
+        className="mt-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-body px-6 py-2.5 font-caps uppercase tracking-caps text-body"
       >
         {rsvp.submitLabel}
       </a>

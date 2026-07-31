@@ -74,7 +74,7 @@ export function CopyAccountButton({
         type="button"
         onClick={handleClick}
         aria-live="polite"
-        className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border border-body px-5 py-1.5 font-caps text-sm uppercase tracking-eyebrow text-body"
+        className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-body px-5 py-1.5 font-caps text-sm uppercase tracking-caps text-body"
       >
         {label}
       </button>

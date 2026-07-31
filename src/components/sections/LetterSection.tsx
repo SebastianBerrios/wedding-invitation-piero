@@ -1,18 +1,24 @@
 import { invitationConfig } from "@/config/invitation";
-import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Countdown } from "@/components/interactive/Countdown";
 
 /**
- * Section 2 of 7: the letter is its own block (headed by `letter.heading`),
- * followed by the countdown as its own labeled sub-block — matching the
- * reference's grouping and fixing Defect 4 (the section's `h2` used to be
- * "Faltan", which described only the countdown, not the letter paragraphs
- * it sat above).
+ * Section 2 of 7 — cream ground.
  *
- * The sub-block's `h3` label now lives INSIDE `Countdown` itself (not here)
- * so it can swap from `letter.countdownHeading` ("Faltan") to
- * `letter.countdownReachedHeading` once the countdown reaches `isPast` —
- * this section stays a server component and renders no countdown state.
+ * The reference's letter is nothing but centred serif paragraphs with generous
+ * leading: no panel, no border, no divider, and no visible title. So this
+ * section's required `h2` is `sr-only` — the same treatment `DateSection`
+ * already uses for the same reason. The heading outline (1x h1 + 7x h2) is
+ * unchanged; only its visibility is, and `letter.heading` still gives assistive
+ * technology a real name for the section instead of an anonymous region.
+ *
+ * `bg-surface` is not redundant with the body background: it makes the section
+ * OPAQUE, which is what lets the floral backdrop stay at full strength in the
+ * hero and be covered from here down (see `PageBackground.tsx`). Every content
+ * section carries its own ground for that reason.
+ *
+ * The countdown is ours, not the reference's — the spec requires it — and it
+ * keeps its own `h3`. It sits here rather than in its own section because the
+ * seven-section order is fixed.
  */
 export function LetterSection() {
   const { letter } = invitationConfig;
@@ -21,19 +27,30 @@ export function LetterSection() {
     <section
       id="letter"
       aria-labelledby="letter-heading"
-      className="mx-auto flex max-w-2xl flex-col items-center gap-10 px-gutter py-section text-center lg:max-w-3xl lg:gap-14"
+      className="bg-surface"
     >
-      <SectionHeading id="letter-heading" heading={letter.heading} />
+      <div className="mx-auto flex max-w-2xl flex-col items-center gap-12 px-gutter py-section text-center lg:max-w-3xl lg:gap-16">
+        <h2 id="letter-heading" className="sr-only">
+          {letter.heading}
+        </h2>
 
-      <div className="flex max-w-prose flex-col gap-4">
-        {letter.paragraphs.map((paragraph, index) => (
-          <p key={index} className="font-serif text-lg text-body lg:text-xl">
-            {paragraph}
-          </p>
-        ))}
+        <div className="flex max-w-prose flex-col gap-6">
+          {letter.paragraphs.map((paragraph, index) => (
+            // `leading-loose` (2.0), not the default: the reference sets these
+            // paragraphs with markedly open leading, and a high-contrast serif
+            // at 18-20px needs it to read as a letter rather than as a block of
+            // body copy.
+            <p
+              key={index}
+              className="font-serif text-lg leading-loose text-body lg:text-xl"
+            >
+              {paragraph}
+            </p>
+          ))}
+        </div>
+
+        <Countdown />
       </div>
-
-      <Countdown />
     </section>
   );
 }
