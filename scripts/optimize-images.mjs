@@ -75,7 +75,76 @@ const FLAP_RECT = { left: 66, top: 99, width: 469, height: 232 };
 /** The sheet's own bounds inside `sheet.png`. 467 x 749 => aspect 0.62350. */
 const CARD_RECT = { left: 13, top: 25, width: 467, height: 749 };
 
-/** @type {{out: string, src: string, widths: number[], crop?: object, flipY?: boolean, backLace?: boolean, quality?: number, role: string}[]} */
+/**
+ * The lace doily's own bounds inside `heart.png` (alpha > 16).
+ * 738 x 649 => aspect 1.13713, i.e. the heart is WIDER than it is tall.
+ *
+ * The source canvas is 800x779 and carries a light wedge of stray RGB in its
+ * top-left corner; every pixel of it has alpha 0, so it never composites and
+ * the crop does not need to dodge it.
+ */
+const HEART_RECT = { left: 28, top: 43, width: 738, height: 649 };
+
+/**
+ * The botanical sprig's own bounds inside `flowers.png` (alpha > 16).
+ * 313 x 623 => aspect 0.50241. Only 1.1% of the source is fully opaque: this is
+ * a soft watercolour study whose edges are almost entirely partial alpha, which
+ * is exactly why it can overlap the doily's outline without looking pasted on.
+ */
+const FLOWERS_RECT = { left: 104, top: 61, width: 313, height: 623 };
+
+/**
+ * The sprig is ROTATED HERE, not in CSS, and that is a bug fix rather than a
+ * preference.
+ *
+ * The source stands upright with its buds at the top and its stem trailing down
+ * to the right; the reference lays it diagonally across the doily's lower-left
+ * with the buds up-right and the stem down-left, which is -52deg.
+ *
+ * Done as a CSS `-rotate-[52deg]` it rendered correctly and still had to go: a
+ * transform does not change an element's layout box, but it DOES change
+ * `getBoundingClientRect()`, and the rotated box of a 117 x 233 element is 256 px
+ * wide. Measured on the real page at a 390px viewport, that box reached x = -53 —
+ * i.e. 53 px outside the viewport — while the visible ink stayed comfortably
+ * inside, because the corners of a rotated bounding box are empty. So it read as
+ * a real edge-crossing element to `audit.mjs` and no amount of repositioning fixed
+ * it without dragging the sprig off the doily.
+ *
+ * Rotating in `sharp` and re-cropping to the rotated ink's own alpha bounds makes
+ * the element axis-aligned again, so its box IS its ink — the same rule the rest
+ * of this pipeline follows — and the geometry cannot lie to a measurement script.
+ */
+const FLOWERS_ROTATE_DEG = -52;
+
+/**
+ * The divider rule's own bounds inside `separator.png` (alpha > 16).
+ * 794 x 21. Its opaque pixels are pure rgb(0,0,0) — a black hairline with a
+ * small diamond at the centre, which is what the reference draws.
+ */
+const SEPARATOR_RECT = { left: 3, top: 0, width: 794, height: 21 };
+
+/**
+ * The paper PANEL's own bounds inside `sheet-two.png` — the sheet only, with
+ * the baked drop shadow deliberately EXCLUDED.
+ *
+ * Measured off the alpha channel and the luminance profile: the paper is fully
+ * opaque over x 91..674, y 89..1500 (584 x 1412 => aspect 0.41389), and a soft
+ * shadow band of partial alpha (peaking at a=78) runs down its right side over
+ * x 675..702. Cropping the shadow out keeps the derivative's box EQUAL to the
+ * paper's box — the same rule the envelope layers follow — so a CSS percentage
+ * inset means what it says instead of silently including 5% of shadow. The
+ * shadow is then drawn with `box-shadow`, where its direction and softness are
+ * tunable and can match the reference's left-hand fall.
+ *
+ * Also measured, and load-bearing for the CSS: the paper carries an embossed
+ * DOUBLE frame whose two lines sit 29 px and 39 px inside the paper edge, and
+ * the inset is the same on all four sides. `.paper-panel` in globals.css slices
+ * this image as a `border-image` at 52 px, i.e. just inside the inner line, so
+ * the frame renders undistorted at any panel height.
+ */
+const PANEL_RECT = { left: 91, top: 89, width: 584, height: 1412 };
+
+/** @type {{out: string, src: string, widths: number[], crop?: object, flipY?: boolean, rotate?: number, backLace?: boolean, quality?: number, alphaQuality?: number, role: string}[]} */
 const JOBS = [
   {
     out: "background",
@@ -126,6 +195,72 @@ const JOBS = [
     crop: CARD_RECT,
     widths: [CARD_RECT.width],
     role: "hero card (L2)",
+  },
+  {
+    out: "heart",
+    src: "heart.png",
+    crop: HEART_RECT,
+    // Four widths. The doily IS the Date section, so it renders from ~290 CSS px
+    // on a 320 viewport to 480 px on desktop.
+    //
+    // 640 exists for the same reason `background` has a 768 step, and the figure
+    // is measured rather than guessed: Lighthouse emulates 412 CSS px at DPR 1.75,
+    // where the doily is 88vw = 362 CSS px = 634 device px. Without a step just
+    // above that, `sizes` selects 738 and pays 10 KiB for resolution nothing can
+    // display. 600 stays for the 1440 desktop case (480 CSS px at DPR 1).
+    widths: [420, 600, 640, HEART_RECT.width],
+    // Quality 48, not the shared 72. A near-white linen texture with lace relief,
+    // no hard edges and no text. Composited over the olive section ground and
+    // diffed against the source at 640w: q72 27.8 KiB @420w, q58 mean 2.75/255,
+    // q48 mean 3.02/255, q40 mean 3.29/255 — the curve is flat from the high 50s
+    // down, so q48 saves 4.7 KiB at 640w (the width Lighthouse's phone fetches)
+    // for a difference of 0.27/255.
+    quality: 48,
+    alphaQuality: 70,
+    role: "date-section doily",
+  },
+  {
+    out: "flowers",
+    src: "flowers.png",
+    crop: FLOWERS_RECT,
+    rotate: FLOWERS_ROTATE_DEG,
+    // One width, 300: the rotated sprig is LANDSCAPE (see the rotate note), and
+    // it renders at ~46% of the doily's width, i.e. ~160 CSS px on a phone and
+    // ~220 on desktop. 300 therefore covers DPR 1 everywhere with headroom, and
+    // is the best available at DPR 2.
+    widths: [300],
+    quality: 55,
+    alphaQuality: 70,
+    role: "sprig overlapping the doily",
+  },
+  {
+    out: "separator",
+    src: "separator.png",
+    crop: SEPARATOR_RECT,
+    widths: [SEPARATOR_RECT.width],
+    // A 21px-tall hairline: quantisation reads directly as a fuzzy line, so
+    // this one keeps a high quality. It is under 1 KiB regardless.
+    quality: 88,
+    role: "section divider rule",
+  },
+  {
+    out: "panel",
+    src: "sheet-two.png",
+    crop: PANEL_RECT,
+    // One width. This is consumed as a `border-image`, whose corner slices
+    // scale by `border-width / border-image-slice` and are therefore
+    // independent of how wide the panel renders; only the stretched middle
+    // cares, and it is a soft near-white grain.
+    widths: [PANEL_RECT.width],
+    // Quality 40. The flattest curve in the whole batch: composited over the olive
+    // ground and diffed, q58 measures a mean 2.07/255 against the source and q34
+    // measures 2.31 — 9.2 KiB for 0.24/255. This is a near-white paper wash whose
+    // only structure is a soft emboss, and crucially NONE of the text on it is part
+    // of the image (the panel is a border-image behind real HTML), so quantisation
+    // cannot blur a glyph. q40 keeps a little margin over the knee.
+    quality: 40,
+    alphaQuality: 70,
+    role: "paper panel (border-image source)",
   },
 ];
 
@@ -258,6 +393,53 @@ async function backLaceWithPaper(pipeline) {
   };
 }
 
+/**
+ * Alpha threshold for a re-crop. Matches the threshold the hardcoded `*_RECT`
+ * constants above were measured at, so a computed crop and a measured one mean
+ * the same thing.
+ */
+const ALPHA_FLOOR = 16;
+
+/**
+ * Re-crops a pipeline to its content's own alpha bounding box.
+ *
+ * Needed after a rotation, which pads the canvas with transparency by an amount
+ * that depends on the angle. Computing the bbox here rather than hardcoding it
+ * keeps the angle the single tunable: change `FLOWERS_ROTATE_DEG` and the crop
+ * follows, instead of silently shipping empty margins that would offset every CSS
+ * percentage that positions the sprig.
+ */
+async function cropToAlphaBounds(pipeline) {
+  const { data, info } = await pipeline
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { width: W, height: H, channels: C } = info;
+  let minX = W, minY = H, maxX = -1, maxY = -1;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (data[(y * W + x) * C + 3] > ALPHA_FLOOR) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  const rect = {
+    left: minX,
+    top: minY,
+    width: maxX - minX + 1,
+    height: maxY - minY + 1,
+  };
+  return {
+    pipeline: sharp(data, { raw: { width: W, height: H, channels: C } }).extract(
+      rect,
+    ),
+    rect,
+  };
+}
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
@@ -280,8 +462,21 @@ async function main() {
         pipeline = backed.pipeline;
         notes.push(`${job.out}: ${backed.note}`);
       }
+      let base = job.crop ?? (await sharp(srcPath).metadata());
+      if (job.rotate) {
+        const rotated = await cropToAlphaBounds(
+          pipeline.rotate(job.rotate, {
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          }),
+        );
+        pipeline = rotated.pipeline;
+        base = rotated.rect;
+        notes.push(
+          `${job.out}: rotated ${job.rotate}deg, re-cropped to ${rotated.rect.width}x${rotated.rect.height}` +
+            ` (aspect ${(rotated.rect.width / rotated.rect.height).toFixed(5)}) — use THESE as the img width/height`,
+        );
+      }
 
-      const base = job.crop ?? (await sharp(srcPath).metadata());
       if (width !== base.width) {
         pipeline = pipeline.resize({ width, withoutEnlargement: true });
       }
@@ -291,7 +486,19 @@ async function main() {
       const sizes = {};
       for (const ext of FORMATS) {
         const buf = await pipeline
-          .clone()[ext]({ ...ENCODERS[ext], ...(job.quality ? { quality: job.quality } : {}) })
+          .clone()[ext]({
+            ...ENCODERS[ext],
+            ...(job.quality ? { quality: job.quality } : {}),
+            // Lossy ALPHA, where it pays. `heart`, `flowers` and `panel` are
+            // dominated by their alpha channel, which WebP stores losslessly by
+            // default: `flowers` measured 29.2 KiB at alphaQuality 100 against
+            // 18.1 at 70, and compositing both over the olive section ground and
+            // diffing every pixel put the whole difference at a mean of
+            // 0.03/255 with an IDENTICAL peak — i.e. the 11 KiB buys nothing
+            // visible. `separator` deliberately opts out: it is a 21px hairline
+            // where any alpha error reads as a fuzzy line, and it is under 1 KiB.
+            ...(job.alphaQuality ? { alphaQuality: job.alphaQuality } : {}),
+          })
           .toBuffer();
         await writeFile(path.join(OUT_DIR, `${stem}.${ext}`), buf);
         outputBytes[ext] += buf.length;
@@ -316,7 +523,7 @@ async function main() {
     );
   }
   console.log("-".repeat(78));
-  console.log(`sources (5 PNGs, kept untouched): ${fmtBytes(sourceBytes)}`);
+  console.log(`sources (unique PNGs, kept untouched): ${fmtBytes(sourceBytes)}`);
   for (const f of FORMATS) {
     console.log(`all ${pad(f, 5)} derivatives:            ${fmtBytes(outputBytes[f])}`);
   }
