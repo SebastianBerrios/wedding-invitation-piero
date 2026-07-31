@@ -45,10 +45,10 @@ them, and nothing in `src/` references them directly.
 | `letter.png` | 600×800 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | Envelope front face + rose closure (`decor/Envelope.tsx`, L4) |
 | `letter-open.png` | 600×800 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | Envelope interior (L1) *and* the animated flap (L3), cropped twice |
 | `sheet.png` | 493×799 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | Hero card (L2) |
-| `sheet-two.png` | 800×1600 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | Not yet used — intended for the content sections' paper panels |
-| `flowers.png` | 533×800 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | Not yet used |
-| `heart.png` | 800×779 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | Not yet used |
-| `separator.png` | 800×21 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | Not yet used |
+| `sheet-two.png` | 800×1600 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | The venue panel AND the itinerary panel, as one `border-image` 9-slice (`decor/PaperPanel.tsx`) |
+| `flowers.png` | 533×800 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | The sprig overlapping the date doily (`sections/DateSection.tsx`) |
+| `heart.png` | 800×779 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | The date section's lace doily (`sections/DateSection.tsx`) |
+| `separator.png` | 800×21 | **User-supplied. Provenance pending confirmation.** | **Unknown — not asserted** | Every section divider (`decor/Separator.tsx`) — four instances, one file |
 
 **Action required from the repository owner** before launch, and before this
 repository stays public with these files in it: state for each file whether it
@@ -71,6 +71,10 @@ and re-encoded. They carry the same unresolved provenance as their sources.
 | `envelope-front.webp` | `letter.png` | crop `[66,323,469×361]` (identical rect, so the two register 1:1), WebP q72 |
 | `envelope-flap.webp` | `letter-open.png` | crop `[66,99,469×232]`, flip vertically, lace holes backed with the flap's own mean paper colour, WebP q72 |
 | `card.webp` | `sheet.png` | crop `[13,25,467×749]`, WebP q72 |
+| `heart-{420,600,640,738}w.webp` | `heart.png` | crop `[28,43,738×649]`, resize, WebP q48 / alphaQuality 70 |
+| `flowers.webp` | `flowers.png` | crop `[104,61,313×623]`, **rotate −52°**, re-crop to the rotated ink's own alpha bounds (604×385), resize to 300w, WebP q55 / alphaQuality 70 |
+| `separator.webp` | `separator.png` | crop `[3,0,794×21]`, WebP q88 with LOSSLESS alpha — a 21px hairline shows any alpha error as a fuzzy line, and it is under 1 KiB either way |
+| `panel.webp` | `sheet-two.png` | crop `[91,89,584×1412]` — the paper only, the baked right-hand drop shadow deliberately excluded so the derivative's box equals the paper's box — WebP q40 / alphaQuality 70 |
 
 ## Fonts
 
@@ -107,10 +111,9 @@ URL because there is no external source.
 | Asset | File | Description |
 |---|---|---|
 | Monogram | `src/components/decor/Monogram.tsx` | Initials as SVG `<text>`, driven by `couple.monogram`. Two variants: `medallion` (double-ring badge, used by `src/app/icon.tsx`) and `plain` (letters only, printed on the envelope's front face below the rose). **The one drawn element kept on the envelope**, because `letter.png` carries no monogram and the reference prints one on the envelope's face |
-| Botanical sprigs (`eucalyptus`, `olive`, `rosebud`) | `src/components/decor/Sprig.tsx` | Three hand-drawn stem + leaf/petal path sets. Used only as section dividers (`src/app/page.tsx`) |
-| Hairline rule / divider | `src/components/decor/Rule.tsx` | A single hand-drawn line + center diamond |
 | Play / pause icon | `src/components/ui/PlayPauseIcon.tsx` | Hand-drawn SVG paths, shared by `HeroSongButton` and `StickyMusicToggle` |
-| Cream veil over the backdrop | `src/app/globals.css` (`.page-veil`, `.page-veil-lower`) | Two flat `--color-surface` layers, the lower one alpha-masked with a `linear-gradient`. Pure CSS, no image. Exists to buy back WCAG AA contrast over the supplied background — the values are measured, see the CSS comments |
+| Cream veil over the backdrop | `src/app/globals.css` (`.page-veil`) | ONE flat `--color-surface` layer at `opacity: 0.10`. Pure CSS, no image. The second, document-height scrim (`.page-veil-lower` at 0.72, alpha-masked) was DELETED once every content section gained its own opaque ground — see the CSS comment for the measurements that justify 0 |
+| Alternating section grounds | `src/app/globals.css` (`--color-surface-dark`) | Flat cream / dark-olive `background-color` on each section, alternating as the reference does. Pure CSS, no image. Cream on the olive measures 7.28:1 |
 | Envelope / card contact shadows | `src/components/decor/Envelope.tsx` | CSS `drop-shadow()` filters on the raster layers, so each shadow follows its image's own alpha rather than a bounding box |
 
 ### Self-authored graphics that were DELETED when the supplied images landed
@@ -128,6 +131,8 @@ reasoning for removing each one is worth keeping.
 | White-rose rosette (3 concentric interleaved rings of one hand-drawn petal path) | `src/components/decor/RoseSeal.tsx` | the rose baked into `letter.png` | A photographic rose, and baking it into the front-face layer is also what makes it correctly occlude the closed flap's tip |
 | Envelope interior / front face / flap / blurred fold shadow (hand-written SVG paths and gradients) | `src/components/decor/Envelope.tsx` | `envelope-back.webp`, `envelope-front.webp`, `envelope-flap.webp` | Real paper tooth, real lace trim, and a real cast shadow from the paper's own edge instead of a faked chevron |
 | Card inset hairline frame (two `aria-hidden` `<span>`s with `--color-rule` borders) | `src/components/decor/Envelope.tsx` | the embossed frame baked into `sheet.png` | Shipping both would put two rules a few pixels apart |
+| Hairline rule / divider (one line plus a rotated centre-diamond `<rect>`, both `--color-rule`) | `src/components/decor/Rule.tsx` | `separator.webp` | The couple supplied that exact ornament. Measured, its opaque pixels are pure rgb(0,0,0) where ours was pale gold at 2.05:1 on cream — the reference's divider clearly reads as a line drawn on paper and the gold one barely read at all |
+| Botanical sprigs (`eucalyptus`, `olive`, `rosebud`) — three hand-drawn stem + leaf/petal path sets | `src/components/decor/Sprig.tsx` | *nothing* (`flowers.webp` covers the one place a sprig is wanted) | Its only consumer was a generic between-sections divider in `page.tsx`. The reference does not divide every section — it brackets the family block, opens the dress code and closes the gifts — so the sections place `Separator` themselves and nothing generic was left to draw |
 
 ## Favicon
 
@@ -160,10 +165,22 @@ assets they never were.
 
 ## Verification checklist
 
-- [x] Every file under `public/` has a matching entry above: `public/audio/song.mp3`, the eight source PNGs in `public/images/`, and the eight WebP derivatives in `public/images/opt/`.
+- [x] Every file under `public/` has a matching entry above: `public/audio/song.mp3`, the eight source PNGs in `public/images/`, and the fourteen WebP derivatives in `public/images/opt/`. All eight sources are now REFERENCED — none is committed-but-unused any more.
 - [x] Every self-authored SVG/CSS graphic component has a matching entry above, and every one that was deleted is recorded with the reason.
-- [x] All three font families are self-hosted via `next/font`, confirmed by network inspection showing zero third-party requests (re-confirmed after the raster swap: 20 requests, 0 off-origin, 6 self-hosted woff2).
+- [x] All three font families are self-hosted via `next/font`, confirmed by network inspection showing zero third-party requests (re-confirmed after the content-section restyle: 24 requests, 0 off-origin, 6 self-hosted woff2).
 - [x] No source PNG is referenced by the app. Every consumer points at `public/images/opt/`, and the sources are read only by `scripts/optimize-images.mjs`.
-- [x] Every raster layer is `aria-hidden="true"` with an empty `alt` — they carry no information, and the real `h1`/`h2` text stays HTML on the card.
+- [x] Every DECORATIVE raster is `aria-hidden="true"` with an empty `alt` and never a description — the five envelope/background layers plus the doily, the sprig and the divider. The paper panel is a CSS `border-image`, so it is not in the accessibility tree at all. Every heading and every line of copy stays HTML.
 - [ ] **OPEN: provenance and licensing of the eight user-supplied PNGs.** Blocking for launch and for keeping this repository public with those files committed. `grep -ri "mejorinvitacion"` returning no matches is *not* evidence about them — a grep over source text cannot establish where a binary came from.
 - [ ] **OPEN: the placeholder audio track** must still be replaced by the couple with a properly licensed one (unchanged from before).
+- [ ] **OPEN: five photographs the reference layout has and this project does not.** Nothing is faked for them. Each is an OPTIONAL `PhotoConfig` field in `src/config/invitation.ts`, currently `NO_PHOTO_YET`, and its frame renders ONLY once a `src` is present — so the layout is complete and correct without them and gains the photograph the moment one lands. No grey boxes, no "image here" placeholders and no stock substitutes were shipped. To add one: put the file under `public/images/`, add a job to `scripts/optimize-images.mjs` if it needs derivatives, then fill in the matching slot.
+
+  | Config slot | What the reference shows there | Frame that appears |
+  |---|---|---|
+  | `venues.ceremony.photo` | Oval, desaturated view of the church | Oval 5:3, grayscale, inside the venue paper panel |
+  | `venues.reception.photo` | Oval, desaturated view of the second venue | same |
+  | `eventDetails.photo` | Full-width portrait of the couple, between the venue panel and the itinerary panel | Full width, 4:5 on a phone / 3:2 from `sm` up |
+  | `dressCode.photo` | Full-width portrait of the couple, after the dress-code block | same |
+  | `gifts.photo` | Full-width portrait of the couple, after the bank details | same |
+
+  `alt` is REQUIRED on each and the validator rejects a blank one: these are content, not decoration.
+- [x] **Three reference elements were deliberately NOT faked and NOT stubbed**: the four line-art itinerary icons, the dress-and-suit line illustration, and the gift-box line illustration. They are omitted entirely rather than substituted, and the layout reads as finished without them — the itinerary is a row of time-over-label columns, and the dress code and gifts blocks are heading plus copy. They get no optional slot because a missing icon in a five-column row would read as a defect, whereas a missing photograph simply is not there.
