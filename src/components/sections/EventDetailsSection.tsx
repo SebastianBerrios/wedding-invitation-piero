@@ -1,6 +1,6 @@
 import { invitationConfig } from "@/config/invitation";
 import { PaperPanel } from "@/components/decor/PaperPanel";
-import { OptionalPhoto } from "@/components/ui/OptionalPhoto";
+import { AssetSlot } from "@/components/ui/AssetSlot";
 
 /**
  * Section 5 of 7 — the second DARK OLIVE section, and the one the reference
@@ -37,7 +37,38 @@ import { OptionalPhoto } from "@/components/ui/OptionalPhoto";
  * and would be unreadable. The section's own `h2` is therefore `sr-only` — the
  * reference prints no heading here either, and inventing a cream one would add an
  * element the reference does not have.
+ *
+ * ## Placeholder tone differs WITHIN this one section
+ *
+ * The venue photos and the itinerary icons sit INSIDE a `PaperPanel`, i.e. on
+ * top of `panel.webp`'s paper (a warm cream, the same ground as every other
+ * text in this section) — `--color-surface` behind it is a fallback for a
+ * failed image load, never the visible ground — so those placeholders use
+ * `tone="on-cream"`, exactly like the venue name/address text next to them.
+ * Measured: `tone="on-olive"` there produced a real WCAG AA failure
+ * (`text-surface` at 1:1 against the paper's actual cream), caught by
+ * `audit.mjs`'s `resolveBg`.
+ *
+ * `eventDetails.photo`, by contrast, sits OUTSIDE both panels, directly on
+ * `bg-surface-dark` — no paper behind it — so it correctly uses
+ * `tone="on-olive"` (confirmed at 7.28:1 by the same script).
  */
+/**
+ * Both the config PATH and the drop-in FILE for a venue photo, keyed by
+ * `venue.kind` (which is "ceremony" or "civil" — the config OBJECT key for
+ * the second venue is "reception", so the config path differs from `kind`).
+ */
+const VENUE_PHOTO: Record<string, { slotPath: string; filePath: string }> = {
+  ceremony: {
+    slotPath: "venues.ceremony.photo",
+    filePath: "public/images/venue-church.png",
+  },
+  civil: {
+    slotPath: "venues.reception.photo",
+    filePath: "public/images/venue-civil.png",
+  },
+};
+
 export function EventDetailsSection() {
   const { venues, itinerary, eventDetails } = invitationConfig;
   const venueList = [venues.ceremony, venues.reception];
@@ -77,7 +108,15 @@ export function EventDetailsSection() {
                 {venue.label}
               </h3>
 
-              <OptionalPhoto photo={venue.photo} variant="oval" />
+              <AssetSlot
+                kind="content"
+                asset={venue.photo}
+                variant="oval"
+                tone="on-cream"
+                description={`${venue.label} photograph`}
+                slotPath={VENUE_PHOTO[venue.kind].slotPath}
+                filePath={VENUE_PHOTO[venue.kind].filePath}
+              />
 
               <p className="font-script text-2xl leading-tight text-ink lg:text-3xl">
                 {venue.name}
@@ -99,7 +138,15 @@ export function EventDetailsSection() {
           ))}
         </PaperPanel>
 
-        <OptionalPhoto photo={eventDetails.photo} variant="interlude" />
+        <AssetSlot
+          kind="content"
+          asset={eventDetails.photo}
+          variant="interlude"
+          tone="on-olive"
+          description="Couple photograph"
+          slotPath="eventDetails.photo"
+          filePath="public/images/couple-event-details.png"
+        />
 
         {/*
           The itinerary panel. LANDSCAPE, so it must override `--panel-frame`:
@@ -147,6 +194,25 @@ export function EventDetailsSection() {
                 key={`${row.time}-${row.label}`}
                 className="flex w-[30%] flex-col items-center gap-1 sm:w-[17%]"
               >
+                {/*
+                  A row with NO `icon` (the real itinerary's 5th row, "Fin de
+                  la fiesta") renders no slot at all — see
+                  `ItineraryRow.icon`'s doc comment. Only a row that DOES
+                  declare an icon type shows a real icon or, until one is
+                  supplied, its placeholder.
+                */}
+                {row.icon ? (
+                  <AssetSlot
+                    kind="decorative"
+                    asset={itinerary.icons?.[row.icon]}
+                    variant="icon"
+                    tone="on-cream"
+                    description={`${row.icon} itinerary icon`}
+                    slotPath={`itinerary.icons.${row.icon}`}
+                    filePath={`public/images/icon-${row.icon}.png`}
+                    className="mb-1"
+                  />
+                ) : null}
                 <span className="shrink-0 whitespace-nowrap font-caps text-sm tabular-nums text-ink">
                   {row.time}
                 </span>

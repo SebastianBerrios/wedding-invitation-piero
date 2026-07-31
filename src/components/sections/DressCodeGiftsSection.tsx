@@ -1,7 +1,7 @@
 import { invitationConfig } from "@/config/invitation";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Separator } from "@/components/decor/Separator";
-import { OptionalPhoto } from "@/components/ui/OptionalPhoto";
+import { AssetSlot } from "@/components/ui/AssetSlot";
 import { CopyAccountButton } from "@/components/interactive/CopyAccountButton";
 import { joinWithConjunction } from "@/lib/list-format";
 
@@ -53,6 +53,16 @@ export function DressCodeGiftsSection() {
           heading={dressCode.scriptWord}
         />
 
+        <AssetSlot
+          kind="decorative"
+          asset={dressCode.illustration}
+          variant="illustration"
+          tone="on-cream"
+          description="Dress-and-suit illustration"
+          slotPath="dressCode.illustration"
+          filePath="public/images/dress-code-illustration.png"
+        />
+
         <div className="flex max-w-prose flex-col items-center gap-3">
           <p className="font-caps text-base uppercase tracking-caps text-ink">
             {dressCode.label}
@@ -67,7 +77,15 @@ export function DressCodeGiftsSection() {
           ) : null}
         </div>
 
-        <OptionalPhoto photo={dressCode.photo} variant="interlude" />
+        <AssetSlot
+          kind="content"
+          asset={dressCode.photo}
+          variant="interlude"
+          tone="on-cream"
+          description="Couple photograph"
+          slotPath="dressCode.photo"
+          filePath="public/images/couple-dress-code.png"
+        />
 
         {/*
           The reference draws a rule between these two blocks as well as above the
@@ -80,6 +98,16 @@ export function DressCodeGiftsSection() {
           as="h3"
           eyebrow={gifts.eyebrow}
           heading={gifts.scriptWord}
+        />
+
+        <AssetSlot
+          kind="decorative"
+          asset={gifts.illustration}
+          variant="illustration"
+          tone="on-cream"
+          description="Gift-box illustration"
+          slotPath="gifts.illustration"
+          filePath="public/images/gifts-illustration.png"
         />
 
         <p className="max-w-prose font-serif leading-relaxed text-body lg:text-lg">
@@ -117,7 +145,15 @@ export function DressCodeGiftsSection() {
           ))}
         </div>
 
-        <OptionalPhoto photo={gifts.photo} variant="interlude" />
+        <AssetSlot
+          kind="content"
+          asset={gifts.photo}
+          variant="interlude"
+          tone="on-cream"
+          description="Couple photograph"
+          slotPath="gifts.photo"
+          filePath="public/images/couple-gifts.png"
+        />
 
         <Separator />
       </div>

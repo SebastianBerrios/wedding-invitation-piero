@@ -1,20 +1,25 @@
 import type { InvitationConfig } from "@/config/invitation.types";
 
 /**
- * The five optional photograph slots the reference layout uses and this project
- * does not yet have files for (see ASSETS.md, "Missing photographs"):
- * one oval view per venue, and three full-width portraits of the couple.
+ * The optional asset slots the reference layout uses and this project does
+ * not yet have files for (see ASSETS.md's verification checklist): one oval
+ * view per venue, three full-width portraits of the couple, a dress-and-suit
+ * illustration, a gift-box illustration, and the itinerary's per-type line-art
+ * icons.
  *
  * They are declared below as an explicit `undefined` rather than left off the
  * object for two reasons. First, `satisfies` narrows to the literal type, so an
  * absent optional key does not exist on the inferred type and every section that
  * reads it would fail to compile. Second — and this is the point — an explicit
- * slot with a comment IS the handover: the couple can see exactly where a
- * photograph goes without reading a component. Fill one in as
- * `{ src: "/images/opt/<file>.webp", alt: "..." }` and its frame appears; leave it
- * and the layout renders complete without it. No placeholder is ever drawn.
+ * slot with a comment IS the handover: the couple/developer can see exactly
+ * where an asset goes without reading a component. Fill one in (a `{ src, alt }`
+ * `PhotoConfig` for a photograph, a `{ src }` `DecorativeAssetConfig` for an
+ * illustration/icon) and its real image appears in place of the placeholder
+ * `AssetSlot` renders while the slot stays empty — see
+ * `src/components/ui/AssetSlot.tsx` for that component and
+ * `ASSETS.md`'s verification checklist for the full per-slot table.
  */
-const NO_PHOTO_YET = undefined;
+const NO_ASSET_YET = undefined;
 
 /**
  * The single source of truth for all invitation content (design §2/§11).
@@ -99,7 +104,7 @@ export const invitationConfig = {
         "https://maps.google.com/?q=Parroquia+Nuestra+Se%C3%B1ora+de+la+Paz+Buganvillas+B-27",
       mapLinkLabel: "Ver ubicación",
       time: "1:30 pm",
-      photo: NO_PHOTO_YET,
+      photo: NO_ASSET_YET,
     },
     // The second venue is the CIVIL ceremony, not a reception. The object key
     // stays `reception` because it is the structural second-venue slot the
@@ -113,7 +118,7 @@ export const invitationConfig = {
         "https://maps.google.com/?q=Majestic+Gregorio+Albarrac%C3%ADn+402",
       mapLinkLabel: "Ver ubicación",
       time: "4:00 pm",
-      photo: NO_PHOTO_YET,
+      photo: NO_ASSET_YET,
     },
   },
   itinerary: {
@@ -127,12 +132,18 @@ export const invitationConfig = {
       { time: "4:00 pm", label: "Matrimonio Civil", icon: "ceremony" },
       { time: "6:00 pm", label: "Cóctel y cena", icon: "cocktail" },
       { time: "7:00 pm", label: "¡A bailar! 💃", icon: "dance" },
+      // Deliberately no `icon` — this row shows no icon slot and no
+      // placeholder (see `ItineraryRow.icon`'s doc comment).
       { time: "11:00 pm", label: "Fin de la fiesta" },
     ],
+    // The two icon TYPES actually used above ("ceremony", "cocktail",
+    // "dance") each render a placeholder until this dictionary supplies a
+    // real asset, e.g. `{ ceremony: { src: "/images/opt/icon-ceremony.webp" } }`.
+    icons: NO_ASSET_YET,
   },
   eventDetails: {
     heading: "Ceremonia y Celebración",
-    photo: NO_PHOTO_YET,
+    photo: NO_ASSET_YET,
   },
   // The heading is TWO lines: `eyebrow` in serif small caps above
   // `scriptWord` in the script face, as in the reference ("CÓDIGO DE" /
@@ -144,7 +155,8 @@ export const invitationConfig = {
     note: "Agradecemos evitar los siguientes colores, reservados para la novia y sus damas:",
     avoidColors: ["Blanco", "Marfil"],
     avoidColorsConjunction: "y",
-    photo: NO_PHOTO_YET,
+    illustration: NO_ASSET_YET,
+    photo: NO_ASSET_YET,
   },
   // Same two-line heading treatment: "SUGERENCIA DE" / "Regalos".
   gifts: {
@@ -164,7 +176,8 @@ export const invitationConfig = {
     copyLabel: "Copiar número de cuenta",
     copiedLabel: "Copiado",
     copyFailedLabel: "No se pudo copiar",
-    photo: NO_PHOTO_YET,
+    illustration: NO_ASSET_YET,
+    photo: NO_ASSET_YET,
   },
   rsvp: {
     heading: "Confirma tu asistencia",

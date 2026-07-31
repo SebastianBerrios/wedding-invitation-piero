@@ -32,6 +32,11 @@ and have been removed rather than softened:
    either self-authored or a permissively-licensed Google Font."*
    Both are now false: the page background, the envelope's three layers and the
    hero card are all raster images derived from the supplied PNGs.
+3. *"No grey boxes, no 'image here' placeholders, no stock substitutes"* for
+   the eight assets this project has no files for. **This instruction was
+   explicitly REVERSED**: the couple asked for visible placeholders instead,
+   so they can see exactly what is missing and where to drop it. See the
+   checklist below for the current, opposite behaviour.
 
 ## User-supplied raster images — provenance PENDING
 
@@ -115,6 +120,7 @@ URL because there is no external source.
 | Cream veil over the backdrop | `src/app/globals.css` (`.page-veil`) | ONE flat `--color-surface` layer at `opacity: 0.10`. Pure CSS, no image. The second, document-height scrim (`.page-veil-lower` at 0.72, alpha-masked) was DELETED once every content section gained its own opaque ground — see the CSS comment for the measurements that justify 0 |
 | Alternating section grounds | `src/app/globals.css` (`--color-surface-dark`) | Flat cream / dark-olive `background-color` on each section, alternating as the reference does. Pure CSS, no image. Cream on the olive measures 7.28:1 |
 | Envelope / card contact shadows | `src/components/decor/Envelope.tsx` | CSS `drop-shadow()` filters on the raster layers, so each shadow follows its image's own alpha rather than a bounding box |
+| Missing-asset placeholders | `src/components/ui/AssetSlot.tsx` | Dashed-outline, muted-fill, labelled boxes shown in place of the eight asset slots this project does not have files for yet (see the checklist below). Pure CSS (a bordered `<div>` plus visible text), no image; the fill/border/text colours all derive from the section's own `--color-body`/`--color-surface` token so no new colour needs its own contrast check |
 
 ### Self-authored graphics that were DELETED when the supplied images landed
 
@@ -172,15 +178,57 @@ assets they never were.
 - [x] Every DECORATIVE raster is `aria-hidden="true"` with an empty `alt` and never a description — the five envelope/background layers plus the doily, the sprig and the divider. The paper panel is a CSS `border-image`, so it is not in the accessibility tree at all. Every heading and every line of copy stays HTML.
 - [ ] **OPEN: provenance and licensing of the eight user-supplied PNGs.** Blocking for launch and for keeping this repository public with those files committed. `grep -ri "mejorinvitacion"` returning no matches is *not* evidence about them — a grep over source text cannot establish where a binary came from.
 - [ ] **OPEN: the placeholder audio track** must still be replaced by the couple with a properly licensed one (unchanged from before).
-- [ ] **OPEN: five photographs the reference layout has and this project does not.** Nothing is faked for them. Each is an OPTIONAL `PhotoConfig` field in `src/config/invitation.ts`, currently `NO_PHOTO_YET`, and its frame renders ONLY once a `src` is present — so the layout is complete and correct without them and gains the photograph the moment one lands. No grey boxes, no "image here" placeholders and no stock substitutes were shipped. To add one: put the file under `public/images/`, add a job to `scripts/optimize-images.mjs` if it needs derivatives, then fill in the matching slot.
+- [ ] **OPEN: eight asset slots the reference layout has and this project does not (updated — placeholders are now VISIBLE by instruction).**
 
-  | Config slot | What the reference shows there | Frame that appears |
-  |---|---|---|
-  | `venues.ceremony.photo` | Oval, desaturated view of the church | Oval 5:3, grayscale, inside the venue paper panel |
-  | `venues.reception.photo` | Oval, desaturated view of the second venue | same |
-  | `eventDetails.photo` | Full-width portrait of the couple, between the venue panel and the itinerary panel | Full width, 4:5 on a phone / 3:2 from `sm` up |
-  | `dressCode.photo` | Full-width portrait of the couple, after the dress-code block | same |
-  | `gifts.photo` | Full-width portrait of the couple, after the bank details | same |
+  An earlier revision of this document said these render nothing and that "no
+  grey boxes, no 'image here' placeholders" were shipped. **That instruction
+  has been REVERSED.** The couple explicitly asked for visible placeholders so
+  assets can be handed off in one pass — sent later, or dropped in by the
+  couple themselves — rather than hunting through components to find out
+  what is still missing. Every slot below currently renders a **dashed-outline,
+  muted-fill, labelled placeholder** via the one shared
+  `src/components/ui/AssetSlot.tsx` component. Each placeholder's own visible
+  text names the slot and the exact file path to drop the real asset at, so
+  the rendered page is itself the handover document. The placeholder box is
+  always the exact size/aspect-ratio the real asset will occupy, so filling a
+  slot in causes zero layout shift.
 
-  `alt` is REQUIRED on each and the validator rejects a blank one: these are content, not decoration.
-- [x] **Three reference elements were deliberately NOT faked and NOT stubbed**: the four line-art itinerary icons, the dress-and-suit line illustration, and the gift-box line illustration. They are omitted entirely rather than substituted, and the layout reads as finished without them — the itinerary is a row of time-over-label columns, and the dress code and gifts blocks are heading plus copy. They get no optional slot because a missing icon in a five-column row would read as a defect, whereas a missing photograph simply is not there.
+  | Config slot | What the reference shows there | Placeholder/frame | Drop-in path |
+  |---|---|---|---|
+  | `venues.ceremony.photo` | Oval, desaturated view of the church | Oval 5:3, grayscale, inside the venue paper panel | `public/images/venue-church.png` |
+  | `venues.reception.photo` | Oval, desaturated view of the second (civil) venue | same | `public/images/venue-civil.png` |
+  | `eventDetails.photo` | Full-width portrait of the couple, between the venue panel and the itinerary panel | Full width, 4:5 on a phone / 3:2 from `sm` up | `public/images/couple-event-details.png` |
+  | `dressCode.photo` | Full-width portrait of the couple, after the dress-code block | same | `public/images/couple-dress-code.png` |
+  | `gifts.photo` | Full-width portrait of the couple, after the bank details | same | `public/images/couple-gifts.png` |
+  | `dressCode.illustration` | Dress-and-suit line drawing, between the heading and "ELEGANTE" | Small line-art box, cream ground | `public/images/dress-code-illustration.png` |
+  | `gifts.illustration` | Gift-box line drawing, between the heading and the paragraph | Small line-art box, cream ground | `public/images/gifts-illustration.png` |
+  | `itinerary.icons.ceremony` / `.cocktail` / `.dance` | One small line-art icon per itinerary row's icon TYPE, above its time | Small square, olive ground | `public/images/icon-ceremony.png` / `icon-cocktail.png` / `icon-dance.png` |
+
+  `alt` is REQUIRED on the five `PhotoConfig` photo slots and the validator
+  rejects a blank one — those are content, not decoration. The three
+  illustration/icon slots are `DecorativeAssetConfig` (no `alt` field): once
+  real they are `aria-hidden` because the row's own label or the section's own
+  heading already carries the information.
+
+  **Itinerary icons are keyed by TYPE, not by row**: `ItineraryConfig.icons` is
+  a dictionary (`ceremony`/`cocktail`/`dance`/`toast`/`dance`/`photos` →
+  asset), so two rows that share an icon type (this config's two `"ceremony"`
+  rows) share one file. The itinerary's 5th row ("Fin de la fiesta") has no
+  `icon` at all and therefore shows no icon slot and no placeholder — a
+  deliberate distinction from a row that HAS an icon type but no matching
+  asset yet, documented on `ItineraryRow.icon` in
+  `src/config/invitation.types.ts`.
+
+  **To fill a slot**: put the file under `public/images/` at the path above,
+  run `npm run images:optimize` if it needs resizing/format conversion (add a
+  job to `scripts/optimize-images.mjs` first if so), then set the matching
+  config field — `{ src: "/images/opt/<file>.webp", alt: "..." }` for a
+  `PhotoConfig` slot, `{ src: "/images/opt/<file>.webp" }` for a decorative
+  one. The placeholder disappears and the real asset fills its exact box.
+
+  **The pre-launch gate now enforces this.** `PRELAUNCH=1 npm run test`
+  (`src/config/invitation.prelaunch.test.ts`, via
+  `findMissingAssets` in `src/config/invitation.validate.ts`) FAILS while any
+  of the slots above is still unfilled, and the assertion's diff enumerates
+  every remaining one by its exact config path — the same mechanism
+  `findPlaceholders` already used for placeholder text sentinels.
