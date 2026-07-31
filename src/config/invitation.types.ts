@@ -81,6 +81,27 @@ export interface FamilyConfig {
   groups: readonly FamilyGroup[];
 }
 
+/**
+ * A CONTENT photograph the couple supplies, e.g. a venue exterior or a portrait
+ * of the two of them.
+ *
+ * Optional everywhere it appears, and that is the point: the reference layout
+ * includes photographs this project does not have, so every frame that could
+ * hold one renders ONLY when a value is present. The layout is complete and
+ * correct without them and gains the photograph the moment a `src` lands here —
+ * no grey boxes, no "image here" placeholders, no stock substitutes.
+ *
+ * `alt` is REQUIRED and validated non-empty because these are content, not
+ * decoration. Decorative assets (the doily, the sprig, the divider, the paper
+ * panels) are `aria-hidden` with an empty `alt` and never come through here.
+ */
+export interface PhotoConfig {
+  /** Root-relative path under `public/`, e.g. "/images/opt/venue-church.webp". */
+  src: string;
+  /** Real description — never a filename, never "photo". */
+  alt: string;
+}
+
 export type VenueKind = "ceremony" | "civil" | "reception";
 
 export interface VenueConfig {
@@ -93,6 +114,11 @@ export interface VenueConfig {
   mapUrl: string;
   mapLinkLabel: string;
   time?: string;
+  /**
+   * Optional oval photograph of the venue, shown inside the paper panel
+   * between the label and the venue name (the reference has one per venue).
+   */
+  photo?: PhotoConfig;
 }
 
 export type ItineraryIcon =
@@ -123,14 +149,29 @@ export interface ItineraryConfig {
  */
 export interface EventDetailsConfig {
   heading: string;
+  /**
+   * Optional full-width photograph of the couple, shown between the venue
+   * panel and the itinerary panel (the reference has one there).
+   */
+  photo?: PhotoConfig;
 }
 
 export interface DressCodeConfig {
+  /** First line of the two-line heading, in serif small caps, e.g. "CÓDIGO DE". */
   eyebrow: string;
+  /** Second line of the same heading, in the script face, e.g. "Vestimenta". */
   scriptWord: string;
   label: string;
   note: string;
   avoidColors: readonly string[];
+  /**
+   * The word that joins the last two entries of `avoidColors` into one
+   * sentence, e.g. "y" (or "e" before an i-/hi- sound). Guest-facing Spanish
+   * copy, so it lives here rather than in `lib/list-format.ts`.
+   */
+  avoidColorsConjunction: string;
+  /** Optional full-width photograph of the couple, shown after this block. */
+  photo?: PhotoConfig;
 }
 
 export interface BankAccount {
@@ -142,13 +183,17 @@ export interface BankAccount {
 }
 
 export interface GiftsConfig {
+  /** First line of the two-line heading, in serif small caps, e.g. "SUGERENCIA DE". */
   eyebrow: string;
+  /** Second line of the same heading, in the script face, e.g. "Regalos". */
   scriptWord: string;
   paragraph: string;
   accounts: readonly BankAccount[];
   copyLabel: string;
   copiedLabel: string;
   copyFailedLabel: string;
+  /** Optional full-width photograph of the couple, shown after this block. */
+  photo?: PhotoConfig;
 }
 
 export interface RsvpMessageTemplate {

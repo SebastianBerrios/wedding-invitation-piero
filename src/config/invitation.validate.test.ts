@@ -86,15 +86,16 @@ const validConfig: InvitationConfig = {
     heading: "Ceremonia y Recepción",
   },
   dressCode: {
-    eyebrow: "CÓDIGO DE VESTIMENTA",
-    scriptWord: "Elegante",
+    eyebrow: "CÓDIGO DE",
+    scriptWord: "Vestimenta",
     label: "ELEGANTE",
     note: "Agradecemos evitar el color blanco.",
     avoidColors: ["Blanco"],
+    avoidColorsConjunction: "y",
   },
   gifts: {
-    eyebrow: "REGALOS",
-    scriptWord: "Detalles",
+    eyebrow: "SUGERENCIA DE",
+    scriptWord: "Regalos",
     paragraph: "Tu presencia es nuestro mejor regalo.",
     accounts: [
       {
@@ -494,6 +495,87 @@ describe("validateInvitationConfig", () => {
           "renders too wide for the hero card — an all-caps name of five letters or more overflows the card in the script face, so use Title Case",
       },
     ]);
+  });
+
+  it("20. rejects a blank dressCode.avoidColorsConjunction", () => {
+    // The dress-code section joins `avoidColors` into one sentence with this
+    // word (`joinWithConjunction`). A blank one silently produces
+    // "Blanco  Marfil".
+    const config = clone();
+    config.dressCode.avoidColorsConjunction = "  ";
+    const errors = validateInvitationConfig(config);
+    expect(errors).toEqual([
+      {
+        path: "dressCode.avoidColorsConjunction",
+        message: "must be non-empty",
+      },
+    ]);
+  });
+
+  it("21. rejects a venue photo whose src is not a root-relative image path", () => {
+    const config = clone();
+    config.venues.ceremony.photo = {
+      src: "https://example.com/church.jpg",
+      alt: "Fachada de la iglesia",
+    };
+    const errors = validateInvitationConfig(config);
+    expect(errors).toEqual([
+      {
+        path: "venues.ceremony.photo.src",
+        message:
+          "must start with / and end with .webp, .avif, .jpg, .jpeg, or .png",
+      },
+    ]);
+  });
+
+  it("22. rejects a photo with a blank alt (these are content, not decoration)", () => {
+    const config = clone();
+    config.venues.reception.photo = {
+      src: "/images/opt/venue-reception.webp",
+      alt: "   ",
+    };
+    const errors = validateInvitationConfig(config);
+    expect(errors).toEqual([
+      { path: "venues.reception.photo.alt", message: "must be non-empty" },
+    ]);
+  });
+
+  it("23. accepts a well-formed venue photo", () => {
+    const config = clone();
+    config.venues.ceremony.photo = {
+      src: "/images/opt/venue-ceremony.webp",
+      alt: "Fachada de la parroquia",
+    };
+    expect(validateInvitationConfig(config)).toEqual([]);
+  });
+
+  it("24. validates the optional photo on every section that can carry one", () => {
+    // Triangulation across the other three photo sites, so the check cannot be
+    // satisfied by a venue-only special case.
+    const config = clone();
+    config.eventDetails.photo = { src: "photo.png", alt: "Los novios" };
+    config.dressCode.photo = { src: "/images/couple.gif", alt: "Los novios" };
+    config.gifts.photo = { src: "/images/couple.webp", alt: "" };
+    expect(validateInvitationConfig(config)).toEqual([
+      {
+        path: "eventDetails.photo.src",
+        message:
+          "must start with / and end with .webp, .avif, .jpg, .jpeg, or .png",
+      },
+      {
+        path: "dressCode.photo.src",
+        message:
+          "must start with / and end with .webp, .avif, .jpg, .jpeg, or .png",
+      },
+      { path: "gifts.photo.alt", message: "must be non-empty" },
+    ]);
+  });
+
+  it("25. accepts a config with no photos at all (they are optional)", () => {
+    const config = clone();
+    expect(config.venues.ceremony.photo).toBeUndefined();
+    expect(config.gifts.photo).toBeUndefined();
+    expect(validateInvitationConfig(config)).toEqual([]);
   });
 });
 

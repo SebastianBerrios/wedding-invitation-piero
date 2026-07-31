@@ -2,6 +2,7 @@ import type {
   CoupleConfig,
   EventDateDisplay,
   InvitationConfig,
+  PhotoConfig,
 } from "@/config/invitation.types";
 
 export interface ConfigError {
@@ -10,6 +11,37 @@ export interface ConfigError {
 }
 
 const nonEmpty = (value: string): boolean => value.trim().length > 0;
+
+const PHOTO_EXTENSION_RE = /\.(webp|avif|jpg|jpeg|png)$/;
+
+/**
+ * Validates one optional content photograph.
+ *
+ * Every photo slot in the config is optional (see `PhotoConfig`) because the
+ * reference layout uses photographs this project does not have. When a slot IS
+ * filled it must be usable: a root-relative path under `public/` — never a
+ * remote URL, which would be a third-party runtime request on a page whose spec
+ * forbids them — and a real `alt`, because these are content and not decoration.
+ */
+function validatePhoto(
+  photo: PhotoConfig | undefined,
+  path: string,
+  errors: ConfigError[],
+): void {
+  if (photo === undefined) {
+    return;
+  }
+  if (!photo.src.startsWith("/") || !PHOTO_EXTENSION_RE.test(photo.src)) {
+    errors.push({
+      path: `${path}.src`,
+      message:
+        "must start with / and end with .webp, .avif, .jpg, .jpeg, or .png",
+    });
+  }
+  if (!nonEmpty(photo.alt)) {
+    errors.push({ path: `${path}.alt`, message: "must be non-empty" });
+  }
+}
 
 const MONOGRAM_RE = /^[A-ZÁÉÍÓÚÑ]{2,3}$/;
 const ISO_INSTANT_RE =
@@ -364,6 +396,15 @@ export function validateInvitationConfig(
       });
     }
   });
+  // 10b. The word that joins the last two avoid-colours into one sentence.
+  // Blank would silently render "Blanco  Marfil" with a double space, which no
+  // visual gate can see — hence a data-layer guard.
+  if (!nonEmpty(config.dressCode.avoidColorsConjunction)) {
+    errors.push({
+      path: "dressCode.avoidColorsConjunction",
+      message: "must be non-empty",
+    });
+  }
 
   // 11. rsvp.maxGuests: integer between 1 and 20
   if (
@@ -457,6 +498,18 @@ export function validateInvitationConfig(
       message: "must be non-empty",
     });
   }
+
+  // 20. Every optional content photograph, in one place.
+  //
+  // Grouped rather than scattered through the per-section blocks above because
+  // this is one cross-cutting rule applied to five slots, and grouping makes the
+  // reported order deterministic. All five are optional: an absent photo is the
+  // normal, valid state until the couple supplies the file.
+  validatePhoto(config.venues.ceremony.photo, "venues.ceremony.photo", errors);
+  validatePhoto(config.venues.reception.photo, "venues.reception.photo", errors);
+  validatePhoto(config.eventDetails.photo, "eventDetails.photo", errors);
+  validatePhoto(config.dressCode.photo, "dressCode.photo", errors);
+  validatePhoto(config.gifts.photo, "gifts.photo", errors);
 
   // 14. meta.title / meta.description
   if (!nonEmpty(config.meta.title)) {
