@@ -4,6 +4,24 @@
   /* Role-named, not hue-named — the role IS the contrast contract (design R3). */
   --color-surface: #fef9f0; /* page background (cream) */
   --color-surface-warm: #f7efdd; /* gradient stop only */
+  /*
+   * The alternating DARK section ground (real-assets batch B). The reference
+   * alternates the page cream with a solid dark olive, and this is that olive.
+   *
+   * It is numerically the same colour as `--color-body`, and it is a SEPARATE
+   * token on purpose: `--color-body` is the ink contract ("olive text on cream"),
+   * this is a surface contract ("cream text on olive"). Collapsing them would
+   * make `bg-body` and `text-body` look interchangeable in a component, and the
+   * next person to nudge the ink colour for legibility would silently repaint
+   * two whole sections.
+   *
+   * Measured: cream `#fef9f0` on this olive is 7.28:1 — AA for normal text and
+   * AAA for large. That is the ONLY text colour legal on this ground; olive-on-
+   * olive is 1:1 and `--color-ink` on it is 1.72:1, i.e. near-black on olive
+   * FAILS. Everything painted on this surface therefore uses `text-surface`, or
+   * sits on a `.paper-panel` that brings its own cream ground.
+   */
+  --color-surface-dark: #575531;
   --color-ink: #0f1015; /* headings, 18.1:1 on surface (near-black) */
   --color-body: #575531; /* ALL body text, 7.29:1 on surface (olive) */
 
@@ -474,14 +492,99 @@
  */
 
 /*
+ * ============================================================================
+ * Paper panel (real-assets batch B) — `sheet-two.png` as a 9-slice frame
+ * ============================================================================
+ *
+ * The reference puts the venue details and the itinerary on framed sheets of
+ * paper laid over the dark olive ground. `panel.webp` is that sheet, cropped in
+ * `scripts/optimize-images.mjs` to the paper's own 584 x 1412 bounds.
+ *
+ * ## Why `border-image`, and not `background-size: 100% 100%`
+ *
+ * The panel's HEIGHT has to follow its content: without the couple's venue
+ * photographs the venue panel is roughly half the height the source paper is,
+ * and the itinerary panel is LANDSCAPE. A stretched background would take the
+ * paper's measured embossed double frame — two lines 29 px and 39 px inside the
+ * paper edge, uniform on all four sides — and squash it non-uniformly, so the
+ * top and bottom frame inset would no longer match the left and right one. On a
+ * landscape panel built from a 1:2.4 portrait source that error is 5.8x.
+ *
+ * A 9-slice fixes it by construction: the four corners scale UNIFORMLY (by
+ * `border-width / border-image-slice`), the four edges stretch only along their
+ * own length — where a straight line is unchanged — and `fill` stretches the
+ * middle, which is nothing but soft near-white grain. One source image therefore
+ * serves both panels at any aspect ratio with the frame intact, which is why
+ * there is no rotated landscape derivative.
+ *
+ * `border-image-slice: 52` is measured, not picked: it lands just inside the
+ * inner frame line (39 px) with 13 px of plain paper to spare, so no slice
+ * boundary ever cuts through the emboss.
+ *
+ * ## Sizing
+ *
+ * `--panel-frame` is the rendered thickness of that 52 px slice, i.e. the frame's
+ * visual weight, and each consumer sets it because the right answer differs:
+ * the portrait panel wants the source's own proportion (52/584 = 8.9% of its
+ * width) while the landscape panel is 2-3x wider and would grow an absurd 80 px
+ * border from the same rule. Expressed in `cqi` against `.paper-panel-frame`
+ * (which is why that wrapper exists — a container may not size itself from its
+ * own container query units), so the frame tracks the panel at every width with
+ * no media query.
+ *
+ * `background-color` is a real fallback, not decoration: every text node inside
+ * these panels is `--color-ink`/`--color-body`, which measure 1.72:1 and 1:1
+ * against the olive section ground. If `panel.webp` ever fails to load, the cream
+ * background keeps that text at 18:1 instead of making the section unreadable.
+ *
+ * The shadow is CSS rather than the source's own baked one: `sheet-two.png`
+ * carries a soft band down its RIGHT side, the reference's falls to the LEFT,
+ * and a baked shadow would have to be inside the crop — which would break the
+ * "the derivative's box IS the object's box" rule the whole pipeline depends on.
+ */
+.paper-panel-frame {
+  container-type: inline-size;
+}
+
+.paper-panel {
+  background-color: var(--color-surface);
+  border-style: solid;
+  border-color: transparent;
+  border-width: var(--panel-frame, 8.9cqi);
+  border-image-source: url("/images/opt/panel.webp");
+  /* 52 of the source's 584 px; `fill` also paints the middle slice. */
+  border-image-slice: 52 fill;
+  border-image-repeat: stretch;
+  /* Soft fall to the LEFT, as in the reference. */
+  box-shadow: -9px 11px 24px -8px rgb(15 16 21 / 0.5);
+}
+
+/*
+ * The Date section's decorative day numeral, e.g. "26".
+ *
+ * Sized in `cqi` against the doily (`.date-doily` establishes the container), not
+ * in `vw`: the numeral has to stay a fixed proportion of the heart it sits inside,
+ * and the heart hits a `max-width` cap on desktop where a `vw` rule would keep
+ * growing and push the numeral through the lace. Same reasoning as
+ * `.envelope-name`, same mechanism.
+ *
+ * `--text-date-xl` (clamp(4rem, 22vw, 9rem)) is deliberately NOT reused here for
+ * exactly that reason; it was written for a numeral that owned the full viewport
+ * width.
+ */
+.date-numeral {
+  font-size: 34cqi;
+  line-height: 0.86;
+}
+
+/*
  * Cream veil over the floral backdrop (see PageBackground.tsx).
  *
- * ## Why there is a veil at all, and why it has TWO zones
+ * ## The veil is a CONTRAST budget, not a taste dial
  *
- * This is a CONTRAST budget, not a taste dial, and every number here was
- * measured with scratchpad/bg-contrast.mjs against real composited pixels — the
- * flat-background assumption in audit.mjs cannot see any of it, and axe reports
- * it only as `incomplete` ("background could not be determined").
+ * Every number here was measured with scratchpad/bg-contrast.mjs against real
+ * composited pixels. Neither of the cheap gates can see this: axe reports it only
+ * as `incomplete` ("background could not be determined").
  *
  * `background-main.png` has a mean luminance of 0.497 and its darkest pixels
  * reach 0.086. Composited over `--color-surface` with the image at opacity a,
@@ -491,107 +594,45 @@
  *   olive body 1.01  1.28  1.64  2.06  2.56  3.14  3.80  4.16  4.54
  *   near-black 2.47  3.19  4.07  5.13  6.37  7.81  9.44 10.34 11.28
  *
- * Measured on the real page (14 text targets at 390 and 1440), the split is
- * clean and not what was expected:
+ * So olive body copy CANNOT sit on this painting: there is no olive that
+ * survives, because solving 4.5:1 against the darkest pixel behind a paragraph
+ * demands a foreground luminance under 0.019 — roughly #262514, black in all but
+ * name, which would delete the olive-on-cream contract the token exists to encode.
+ * Only the hero survives the bare painting, and it does so because everything up
+ * there is `--color-ink` or sits on the card's own ivory paper (16:1).
  *
- *   - EVERY hero target passes at any veil, worst 6.36:1, INCLUDING the song
- *     prompt and the scroll hint that sit directly on the unveiled floral.
- *     They already use `--color-ink` — a prior pass moved them there for this
- *     exact reason against the SVG floral this replaced, and that fix holds.
- *   - EVERY `--color-body` (olive #575531) target FAILS at every veil worth
- *     shipping: `#letter p` measures 1.33:1 at a = 0.92 and still only 2.95:1
- *     with the painting 45% erased. There is no olive that survives: solving
- *     4.5:1 against the darkest pixel behind that paragraph demands a
- *     foreground luminance under 0.019, i.e. roughly #262514 — indistinguishable
- *     from black, so redefining the token buys nothing the ink token does not
- *     already give.
+ * ## Why there is now only ONE zone again
  *
- * The six content sections carry NO surface of their own, which is the actual
- * defect. The reference does not put body copy on the painting at all: it puts
- * it on white paper panels, which is what `sheet-two.png` was supplied for and
- * is the next batch's work. Until then the page splits the difference by zone:
+ * Batch A shipped a SECOND, document-height scrim (`--page-veil-lower: 0.72`,
+ * ramped in with a mask from 78svh) purely to hold the six content sections at AA
+ * while they still had no surface of their own. That was explicitly an interim
+ * measure, and it cost the thing it was protecting: the painting read as a ghost
+ * everywhere below the hero.
  *
- *   --page-veil        the hero's zone. Kept light so the painting reads at
- *                      full strength where it is the whole composition. Safe
- *                      because everything above the fold is ink or sits on the
- *                      card's own ivory paper (16:1).
- *   --page-veil-lower  everything below the hero. Stacked on top of the first,
- *                      so the effective cream alpha there is
- *                      1 - (1 - 0.10)(1 - 0.72) = 0.748.
+ * Batch B removed the cause. Every content section now paints its OWN opaque
+ * ground — cream or the dark olive `--color-surface-dark`, alternating, as the
+ * reference does — so no body copy composites against the painting at all any
+ * more. Measured after the change: the worst text target on the page is 7.26:1
+ * and the veil-lower sweep is moot, so the scrim, its mask, its custom property
+ * and the `body { position: relative }` it needed as a containing block are all
+ * DELETED rather than set to zero. Nothing is left to re-tune later.
  *
- * 0.72 was found by sweeping it against the real render, not by arithmetic on
- * the whole painting. Worst measured target at 390 and 1440:
+ * The consequence is intended: the painting is now visible at full strength in
+ * the hero and nowhere else, which is exactly the reference's structure — a
+ * painted opening, then flat alternating panels.
  *
- *   --page-veil-lower   0.34   0.62   0.69   0.72
- *   worst olive target  2.70   4.28   4.77   4.98   (threshold 4.50)
- *
- * So zone 2 keeps very nearly the cream ground the six sections were designed
- * for, with the floral present as a ghost, and zone 1 gets the painting at
- * full strength. That is a deliberate trade and the alternative was worse:
- * redefining `--color-body` dark enough to survive a strong painting lands at
- * roughly #262514, which is black in all but name and would delete the
- * olive-on-cream contract the token exists to encode.
- *
- * This is the same two-intensity idea the deleted SVG floral already used
- * (hero 0.90 / page 0.52), reached from the opposite direction: that one varied
- * the artwork's strength for looks, this one varies the veil for legibility.
- *
- * When the sections get their paper panels, `--page-veil-lower` should drop
- * toward 0 — the panels will then be doing this job properly, and the painting
- * can come back up under them.
+ * `--page-veil: 0.10` is unchanged and still measured: it is the small amount of
+ * cream that keeps the hero's own song prompt and scroll hint comfortable.
  */
 :root {
   /*
-   * Opacity of the CREAM layers, so image opacity a = 1 - veil.
+   * Opacity of the CREAM layer, so image opacity a = 1 - veil.
    */
   --page-veil: 0.1;
-  --page-veil-lower: 0.72;
 }
 
 .page-veil {
   opacity: var(--page-veil);
-}
-
-/*
- * The lower zone's scrim. Absolutely positioned against `<body>` (hence
- * `body { position: relative }` below), so it spans the DOCUMENT rather than the
- * viewport and therefore stays put under the content it is protecting, unlike
- * the `fixed` backdrop it sits on.
- *
- * The ramp is a MASK, not a gradient fill. A `linear-gradient(transparent,
- * var(--color-surface))` interpolates toward transparent BLACK in sRGB and puts
- * a grey bruise in the middle of the fade; the colour-space fixes for that
- * (`in oklab`, `color-mix`) both need browsers newer than this project's
- * `browserslist` floor (safari 15.4). A mask interpolates in the alpha channel
- * only, so there is no colour to get wrong, and `-webkit-mask-image` covers the
- * floor.
- *
- * The ramp runs 78svh -> 118svh. Both ends were set by looking at the render:
- *   - it cannot end AT 100svh, because the hero is `min-h-svh` and can be
- *     taller than one viewport at narrow widths (measured 641px at 320x640), so
- *     a hard edge there lands inside the hero.
- *   - it cannot start at 55svh either: that was tried first and visibly drained
- *     the painting out of the hero's lower third, from just under the envelope
- *     down past the scroll hint. 78svh puts the start below the song prompt, so
- *     the hero keeps the painting at full strength everywhere it is the
- *     composition, and 40svh of ramp keeps the fade itself invisible.
- * The first content section then sits in the tail of the ramp rather than at
- * full veil; that is why the contrast sweep above was run on the real page,
- * where `#letter p` is exactly that case.
- */
-.page-veil-lower {
-  top: 78svh;
-  opacity: var(--page-veil-lower);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 40svh);
-  mask-image: linear-gradient(to bottom, transparent 0, black 40svh);
-}
-
-body {
-  /*
-   * Containing block for `.page-veil-lower`, which must be document-height, not
-   * viewport-height.
-   */
-  position: relative;
 }
 
 /*
