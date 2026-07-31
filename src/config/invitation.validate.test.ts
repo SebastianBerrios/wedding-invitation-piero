@@ -3,6 +3,7 @@ import type { InvitationConfig } from "@/config/invitation.types";
 import {
   validateInvitationConfig,
   findPlaceholders,
+  findMissingAssets,
 } from "@/config/invitation.validate";
 
 /**
@@ -576,6 +577,119 @@ describe("validateInvitationConfig", () => {
     expect(config.venues.ceremony.photo).toBeUndefined();
     expect(config.gifts.photo).toBeUndefined();
     expect(validateInvitationConfig(config)).toEqual([]);
+  });
+
+  it("26. rejects a dressCode/gifts illustration whose src is not a root-relative image path", () => {
+    const config = clone();
+    config.dressCode.illustration = { src: "dress-code.svg" };
+    config.gifts.illustration = { src: "https://example.com/gift.png" };
+    const errors = validateInvitationConfig(config);
+    expect(errors).toEqual([
+      {
+        path: "dressCode.illustration.src",
+        message:
+          "must start with / and end with .webp, .avif, .jpg, .jpeg, or .png",
+      },
+      {
+        path: "gifts.illustration.src",
+        message:
+          "must start with / and end with .webp, .avif, .jpg, .jpeg, or .png",
+      },
+    ]);
+  });
+
+  it("27. accepts a well-formed illustration and requires no alt (decorative)", () => {
+    const config = clone();
+    config.dressCode.illustration = { src: "/images/opt/dress-code.webp" };
+    expect(validateInvitationConfig(config)).toEqual([]);
+  });
+
+  it("28. rejects an itinerary icon asset with a malformed src, keyed by icon type", () => {
+    const config = clone();
+    config.itinerary.icons = {
+      ceremony: { src: "ceremony-icon.svg" },
+      cocktail: { src: "/images/opt/icon-cocktail.webp" },
+    };
+    const errors = validateInvitationConfig(config);
+    expect(errors).toEqual([
+      {
+        path: "itinerary.icons.ceremony.src",
+        message:
+          "must start with / and end with .webp, .avif, .jpg, .jpeg, or .png",
+      },
+    ]);
+  });
+
+  it("29. accepts a config with no illustrations or icon assets at all (they are optional)", () => {
+    const config = clone();
+    expect(config.dressCode.illustration).toBeUndefined();
+    expect(config.gifts.illustration).toBeUndefined();
+    expect(config.itinerary.icons).toBeUndefined();
+    expect(validateInvitationConfig(config)).toEqual([]);
+  });
+});
+
+describe("findMissingAssets", () => {
+  it("enumerates every unfilled optional asset slot, in a deterministic order", () => {
+    // `validConfig` has no photos, no illustrations, and no `itinerary.icons`
+    // dictionary, but its rows use "ceremony" and "cocktail" icon TYPES.
+    const errors = findMissingAssets(validConfig);
+    expect(errors.map((e) => e.path)).toEqual([
+      "venues.ceremony.photo",
+      "venues.reception.photo",
+      "eventDetails.photo",
+      "dressCode.photo",
+      "dressCode.illustration",
+      "gifts.photo",
+      "gifts.illustration",
+      "itinerary.icons.ceremony",
+      "itinerary.icons.cocktail",
+    ]);
+  });
+
+  it("stops flagging a slot once it is filled", () => {
+    const config = clone();
+    config.venues.ceremony.photo = {
+      src: "/images/opt/venue-ceremony.webp",
+      alt: "Fachada de la parroquia",
+    };
+    config.itinerary.icons = {
+      ceremony: { src: "/images/opt/icon-ceremony.webp" },
+    };
+    const paths = findMissingAssets(config).map((e) => e.path);
+    expect(paths).not.toContain("venues.ceremony.photo");
+    expect(paths).not.toContain("itinerary.icons.ceremony");
+    expect(paths).toContain("itinerary.icons.cocktail");
+  });
+
+  it("never flags an icon type no itinerary row actually uses", () => {
+    const config = clone();
+    config.itinerary = {
+      ...config.itinerary,
+      rows: [{ time: "1:00 pm", label: "Solo ceremonia", icon: "ceremony" }],
+    };
+    const paths = findMissingAssets(config).map((e) => e.path);
+    expect(paths).toContain("itinerary.icons.ceremony");
+    expect(paths).not.toContain("itinerary.icons.cocktail");
+    expect(paths).not.toContain("itinerary.icons.dance");
+    expect(paths).not.toContain("itinerary.icons.toast");
+    expect(paths).not.toContain("itinerary.icons.photos");
+  });
+
+  it("returns [] once every asset slot referenced by the config is filled", () => {
+    const config = clone();
+    config.venues.ceremony.photo = { src: "/images/opt/a.webp", alt: "a" };
+    config.venues.reception.photo = { src: "/images/opt/b.webp", alt: "b" };
+    config.eventDetails.photo = { src: "/images/opt/c.webp", alt: "c" };
+    config.dressCode.photo = { src: "/images/opt/d.webp", alt: "d" };
+    config.dressCode.illustration = { src: "/images/opt/e.webp" };
+    config.gifts.photo = { src: "/images/opt/f.webp", alt: "f" };
+    config.gifts.illustration = { src: "/images/opt/g.webp" };
+    config.itinerary.icons = {
+      ceremony: { src: "/images/opt/h.webp" },
+      cocktail: { src: "/images/opt/i.webp" },
+    };
+    expect(findMissingAssets(config)).toEqual([]);
   });
 });
 

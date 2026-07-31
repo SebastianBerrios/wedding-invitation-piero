@@ -102,6 +102,22 @@ export interface PhotoConfig {
   alt: string;
 }
 
+/**
+ * A DECORATIVE illustration or icon the couple supplies, e.g. the itinerary's
+ * line-art icons or the dress-code/gifts illustrations.
+ *
+ * Unlike `PhotoConfig`, no `alt` is required: once real, the asset is purely
+ * visual (`aria-hidden`, empty `alt`) because the surrounding text already
+ * carries the information (an itinerary row's own label, a section's own
+ * heading). Optional everywhere it appears, for the same reason `PhotoConfig`
+ * is optional: the reference layout draws graphics this project does not have
+ * files for yet.
+ */
+export interface DecorativeAssetConfig {
+  /** Root-relative path under `public/`, e.g. "/images/opt/icon-ceremony.webp". */
+  src: string;
+}
+
 export type VenueKind = "ceremony" | "civil" | "reception";
 
 export interface VenueConfig {
@@ -132,6 +148,18 @@ export type ItineraryIcon =
 export interface ItineraryRow {
   time: string;
   label: string;
+  /**
+   * Which line-art icon type this row draws above its time, if any. The
+   * actual asset for a type lives in `ItineraryConfig.icons`, not here — see
+   * that field's doc comment for why.
+   *
+   * A row with NO `icon` at all (the real itinerary's 5th row, "Fin de la
+   * fiesta") renders no icon slot and no placeholder: an icon is an optional
+   * embellishment some stops get and others deliberately do not, so an
+   * absent `icon` means "this row was never meant to have one" rather than
+   * "an icon is missing here". Only a row that DOES declare an `icon` but
+   * has no matching entry in `ItineraryConfig.icons` shows a placeholder.
+   */
   icon?: ItineraryIcon;
 }
 
@@ -140,6 +168,14 @@ export interface ItineraryConfig {
   heading: string;
   /** Variable-length by design — never a fixed tuple. */
   rows: readonly ItineraryRow[];
+  /**
+   * The line-art icon asset for each icon TYPE, not one per row — rows that
+   * share an `icon` value (e.g. two `"ceremony"` rows) share the same
+   * graphic. Keyed by `ItineraryIcon` rather than by row index; a row whose
+   * `icon` is absent has no icon slot at all (see `ItineraryRow.icon`'s doc
+   * comment — that is a deliberate, not incidental, choice).
+   */
+  icons?: Partial<Record<ItineraryIcon, DecorativeAssetConfig>>;
 }
 
 /**
@@ -170,6 +206,11 @@ export interface DressCodeConfig {
    * copy, so it lives here rather than in `lib/list-format.ts`.
    */
   avoidColorsConjunction: string;
+  /**
+   * Optional line-art illustration (dress-and-suit), shown between the
+   * heading and `label` ("ELEGANTE").
+   */
+  illustration?: DecorativeAssetConfig;
   /** Optional full-width photograph of the couple, shown after this block. */
   photo?: PhotoConfig;
 }
@@ -192,6 +233,11 @@ export interface GiftsConfig {
   copyLabel: string;
   copiedLabel: string;
   copyFailedLabel: string;
+  /**
+   * Optional line-art illustration (gift box), shown between the heading
+   * and `paragraph`.
+   */
+  illustration?: DecorativeAssetConfig;
   /** Optional full-width photograph of the couple, shown after this block. */
   photo?: PhotoConfig;
 }

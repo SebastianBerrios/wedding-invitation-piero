@@ -1,7 +1,9 @@
 import type {
   CoupleConfig,
+  DecorativeAssetConfig,
   EventDateDisplay,
   InvitationConfig,
+  ItineraryIcon,
   PhotoConfig,
 } from "@/config/invitation.types";
 
@@ -40,6 +42,28 @@ function validatePhoto(
   }
   if (!nonEmpty(photo.alt)) {
     errors.push({ path: `${path}.alt`, message: "must be non-empty" });
+  }
+}
+
+/**
+ * Validates one optional DECORATIVE asset (an illustration or an itinerary
+ * icon). Same path-format rule as `validatePhoto`, minus the `alt` check —
+ * these are never content, so no description is required.
+ */
+function validateAssetSrc(
+  asset: DecorativeAssetConfig | undefined,
+  path: string,
+  errors: ConfigError[],
+): void {
+  if (asset === undefined) {
+    return;
+  }
+  if (!asset.src.startsWith("/") || !PHOTO_EXTENSION_RE.test(asset.src)) {
+    errors.push({
+      path: `${path}.src`,
+      message:
+        "must start with / and end with .webp, .avif, .jpg, .jpeg, or .png",
+    });
   }
 }
 
@@ -511,6 +535,22 @@ export function validateInvitationConfig(
   validatePhoto(config.dressCode.photo, "dressCode.photo", errors);
   validatePhoto(config.gifts.photo, "gifts.photo", errors);
 
+  // 21. dressCode.illustration / gifts.illustration — decorative, src format
+  // only (no alt: these are never content).
+  validateAssetSrc(
+    config.dressCode.illustration,
+    "dressCode.illustration",
+    errors,
+  );
+  validateAssetSrc(config.gifts.illustration, "gifts.illustration", errors);
+
+  // 22. itinerary.icons — decorative, one optional asset per icon TYPE.
+  if (config.itinerary.icons) {
+    for (const [icon, asset] of Object.entries(config.itinerary.icons)) {
+      validateAssetSrc(asset, `itinerary.icons.${icon}`, errors);
+    }
+  }
+
   // 14. meta.title / meta.description
   if (!nonEmpty(config.meta.title)) {
     errors.push({ path: "meta.title", message: "must be non-empty" });
@@ -522,6 +562,63 @@ export function validateInvitationConfig(
       path: "meta.description",
       message: "must be 160 characters or fewer",
     });
+  }
+
+  return errors;
+}
+
+/**
+ * Enumerates every optional asset slot that is CURRENTLY unfilled: the five
+ * content photographs, the two decorative illustrations, and one entry per
+ * itinerary icon TYPE that at least one row actually references.
+ *
+ * This is the safeguard the visible-placeholder decision needs: every slot
+ * reported here is a slot some section is rendering as a placeholder right
+ * now, so a page cannot go out with one still unfilled. Never imported by
+ * application code — enforced only by `invitation.prelaunch.test.ts` under
+ * `PRELAUNCH=1 npm run test`, the same mechanism as `findPlaceholders`.
+ *
+ * Order is deterministic (declaration order of the five photo slots, then
+ * the two illustrations, then icon types in the order they first appear
+ * across `itinerary.rows`) so a failing assertion's diff is stable and
+ * readable rather than shuffled between runs.
+ */
+export function findMissingAssets(config: InvitationConfig): ConfigError[] {
+  const errors: ConfigError[] = [];
+
+  const checkPhoto = (photo: PhotoConfig | undefined, path: string): void => {
+    if (photo === undefined) {
+      errors.push({ path, message: "no photograph supplied yet" });
+    }
+  };
+  const checkAsset = (
+    asset: DecorativeAssetConfig | undefined,
+    path: string,
+  ): void => {
+    if (asset === undefined) {
+      errors.push({ path, message: "no asset supplied yet" });
+    }
+  };
+
+  checkPhoto(config.venues.ceremony.photo, "venues.ceremony.photo");
+  checkPhoto(config.venues.reception.photo, "venues.reception.photo");
+  checkPhoto(config.eventDetails.photo, "eventDetails.photo");
+  checkPhoto(config.dressCode.photo, "dressCode.photo");
+  checkAsset(config.dressCode.illustration, "dressCode.illustration");
+  checkPhoto(config.gifts.photo, "gifts.photo");
+  checkAsset(config.gifts.illustration, "gifts.illustration");
+
+  // Only icon TYPES a row actually uses count as a "slot" — an icon type no
+  // row references was never asked for, so flagging it would report a slot
+  // that does not exist anywhere on the page.
+  const usedIconTypes: ItineraryIcon[] = [];
+  for (const row of config.itinerary.rows) {
+    if (row.icon !== undefined && !usedIconTypes.includes(row.icon)) {
+      usedIconTypes.push(row.icon);
+    }
+  }
+  for (const icon of usedIconTypes) {
+    checkAsset(config.itinerary.icons?.[icon], `itinerary.icons.${icon}`);
   }
 
   return errors;
